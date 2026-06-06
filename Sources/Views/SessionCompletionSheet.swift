@@ -13,18 +13,20 @@ struct SessionCompletionSheet: View {
     let onSave: () -> Void
     let onCancel: () -> Void
     
+    @State private var selectedStartTime: Date
     @State private var selectedEndTime: Date
-    
+
     init(sessionStartTime: Date, sessionAmount: Double, onSave: @escaping () -> Void, onCancel: @escaping () -> Void) {
         self.sessionStartTime = sessionStartTime
         self.sessionAmount = sessionAmount
         self.onSave = onSave
         self.onCancel = onCancel
+        self._selectedStartTime = State(initialValue: sessionStartTime)
         self._selectedEndTime = State(initialValue: Date())
     }
-    
+
     private var sessionDuration: TimeInterval {
-        selectedEndTime.timeIntervalSince(sessionStartTime)
+        selectedEndTime.timeIntervalSince(selectedStartTime)
     }
     
     private var formattedDuration: String {
@@ -105,15 +107,20 @@ struct SessionCompletionSheet: View {
                     
                     // Time adjustment section
                     VStack(spacing: 16) {
-                        // Start time (non-editable)
+                        // Start time picker
                         VStack(alignment: .leading, spacing: 8) {
                             Text("START TIME")
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundColor(.white.opacity(0.6))
                                 .tracking(1.2)
-                            Text(formatTime(sessionStartTime))
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.white)
+
+                            DatePicker("", selection: $selectedStartTime,
+                                      in: ...selectedEndTime,
+                                      displayedComponents: [.hourAndMinute])
+                                .datePickerStyle(.wheel)
+                                .labelsHidden()
+                                .colorScheme(.dark)
+                                .frame(height: 100)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
@@ -127,8 +134,8 @@ struct SessionCompletionSheet: View {
                                 .foregroundColor(.white.opacity(0.6))
                                 .tracking(1.2)
                             
-                            DatePicker("", selection: $selectedEndTime, 
-                                      in: sessionStartTime...Date(), 
+                            DatePicker("", selection: $selectedEndTime,
+                                      in: selectedStartTime...Date(),
                                       displayedComponents: [.hourAndMinute])
                                 .datePickerStyle(.wheel)
                                 .labelsHidden()
@@ -213,7 +220,7 @@ struct SessionCompletionSheet: View {
             vitaminDCalculator.refreshTodayTotals(forceWidget: true)
             // Create and save session record to SwiftData
             let session = VitaminDSession(
-                startTime: sessionStartTime,
+                startTime: selectedStartTime,
                 totalIU: sessionAmount,
                 averageUV: 0, // TODO: Calculate average UV
                 peakUV: 0, // TODO: Track peak UV
