@@ -13,6 +13,8 @@ struct SessionCompletionSheet: View {
     let onSave: () -> Void
     let onCancel: () -> Void
     
+    @AppStorage("usesMCG") private var usesMCG: Bool = false
+
     @State private var selectedEndTime: Date
     
     init(sessionStartTime: Date, sessionAmount: Double, onSave: @escaping () -> Void, onCancel: @escaping () -> Void) {
@@ -43,15 +45,17 @@ struct SessionCompletionSheet: View {
     }
     
     private var formattedAmount: String {
-        if sessionAmount < 1000 {
-            return "\(Int(sessionAmount)) IU"
-        } else if sessionAmount < 100000 {
+        let value = usesMCG ? sessionAmount / 40.0 : sessionAmount
+        let unit = usesMCG ? "mcg" : "IU"
+        if value < 1000 {
+            return "\(Int(value)) \(unit)"
+        } else if value < 100000 {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
             formatter.maximumFractionDigits = 0
-            return "\(formatter.string(from: NSNumber(value: sessionAmount)) ?? "\(Int(sessionAmount))") IU"
+            return "\(formatter.string(from: NSNumber(value: value)) ?? "\(Int(value))") \(unit)"
         } else {
-            return String(format: "%.0fK IU", sessionAmount / 1000)
+            return String(format: "%.0fK \(unit)", value / 1000)
         }
     }
     
