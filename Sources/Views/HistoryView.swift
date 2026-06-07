@@ -25,7 +25,7 @@ struct HistoryView: View {
         /// How many daily bars to display
         var displayDays: Int {
             switch self {
-            case .week:       return 28
+            case .week:       return 7
             case .month:      return 30
             case .threeMonth: return 90
             }
@@ -33,7 +33,7 @@ struct HistoryView: View {
 
         var avgLabel: String {
             switch self {
-            case .week:       return "AVG / DAY  ·  4 WEEKS"
+            case .week:       return "AVG / DAY  ·  7 DAYS"
             case .month:      return "AVG / DAY  ·  30 DAYS"
             case .threeMonth: return "AVG / DAY  ·  3 MONTHS"
             }
@@ -42,7 +42,7 @@ struct HistoryView: View {
         /// Desired number of x-axis labels
         var axisLabelCount: Int {
             switch self {
-            case .week:       return 4
+            case .week:       return 7
             case .month:      return 5
             case .threeMonth: return 4
             }
@@ -220,7 +220,7 @@ struct HistoryView: View {
     // MARK: X-axis format
     private var xFormat: Date.FormatStyle {
         switch period {
-        case .week:       return .dateTime.month(.abbreviated).day()
+        case .week:       return .dateTime.weekday(.abbreviated)
         case .month:      return .dateTime.month(.abbreviated).day()
         case .threeMonth: return .dateTime.month(.abbreviated)
         }
