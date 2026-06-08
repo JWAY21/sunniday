@@ -230,7 +230,7 @@ struct SessionCompletionSheet: View {
     private func saveSession() {
         // Save the recalculated amount (currentAmount) to HealthKit, not the
         // original sessionAmount, so the Health record matches the adjusted times.
-        healthManager.saveVitaminD(amount: currentAmount) { _ in
+        healthManager.saveVitaminD(amount: currentAmount, date: selectedStartTime) { _ in
             vitaminDCalculator.refreshTodayTotals(forceWidget: true)
             let session = VitaminDSession(
                 startTime: selectedStartTime,
