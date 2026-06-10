@@ -406,22 +406,12 @@ struct ContentView: View {
                                     .foregroundColor(.yellow.opacity(0.9))
                             }
                         }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 4)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .confirmationDialog("Override Cloud Cover", isPresented: $showCloudOverridePicker, titleVisibility: .visible) {
-                        Button("☀️  0% — Clear sky")         { uvService.applyCloudOverride(0) }
-                        Button("🌤  25% — Mostly sunny")     { uvService.applyCloudOverride(25) }
-                        Button("⛅️  50% — Partly cloudy")    { uvService.applyCloudOverride(50) }
-                        Button("🌥  75% — Mostly cloudy")    { uvService.applyCloudOverride(75) }
-                        Button("🌧  100% — Overcast / rain") { uvService.applyCloudOverride(100) }
-                        if uvService.cloudCoverOverride != nil {
-                            Button("↩ Reset to weather data", role: .destructive) { uvService.clearCloudOverride() }
-                        }
-                        Button("Cancel", role: .cancel) { }
-                    } message: {
-                        Text("Select actual conditions to fine-tune UV calculation")
-                    }
-                    
+
                     if uvService.currentAltitude > 100 {
                         HStack(spacing: 5) {
                             Image(systemName: "arrow.up.to.line")
@@ -451,8 +441,21 @@ struct ContentView: View {
                 }
             }
             .padding(.top, 3)
-            
-            
+            .confirmationDialog("Override Cloud Cover", isPresented: $showCloudOverridePicker, titleVisibility: .visible) {
+                Button("☀️  0% — Clear sky")         { uvService.applyCloudOverride(0) }
+                Button("🌤  25% — Mostly sunny")     { uvService.applyCloudOverride(25) }
+                Button("⛅️  50% — Partly cloudy")    { uvService.applyCloudOverride(50) }
+                Button("🌥  75% — Mostly cloudy")    { uvService.applyCloudOverride(75) }
+                Button("🌧  100% — Overcast / rain") { uvService.applyCloudOverride(100) }
+                if uvService.cloudCoverOverride != nil {
+                    Button("↩ Reset to weather data", role: .destructive) { uvService.clearCloudOverride() }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Select actual conditions to fine-tune UV calculation")
+            }
+
+
             // Vitamin D winter warning
             if uvService.isVitaminDWinter {
                 HStack(spacing: 8) {
