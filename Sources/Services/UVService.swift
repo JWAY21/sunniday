@@ -57,6 +57,8 @@ class UVService: ObservableObject {
     @Published var currentAltitude: Double = 0.0
     @Published var uvMultiplier: Double = 1.0
     @Published var currentCloudCover: Double = 0.0
+    /// Non-nil when the user has manually overridden the cloud cover (0–100).
+    @Published var cloudCoverOverride: Double? = nil
     @Published var currentMoonPhase: Double = 0.0
     @Published var currentMoonPhaseName: String = ""
     @Published var isVitaminDWinter = false
@@ -69,7 +71,38 @@ class UVService: ObservableObject {
     private var lastRetryLocation: CLLocation?
     private var networkMonitor: NetworkMonitor?
     private var networkCancellable: AnyCancellable?
+    /// UV and cloud cover values as received from the API (before any user override).
+    private var apiUV: Double = 0.0
+    private var apiCloudCover: Double = 0.0
     
+    // MARK: Cloud Cover Override
+
+    /// Transmission factor for a given cloud cover percentage (0–100).
+    /// Uses a simple linear model: 1.0 at 0% cloud → 0.15 at 100% cloud.
+    private func cloudTransmission(_ cloudPercent: Double) -> Double {
+        return max(0.15, 1.0 - 0.85 * (cloudPercent / 100.0))
+    }
+
+    /// Apply a user-selected cloud cover override (0, 25, 50, 75, or 100).
+    /// Adjusts `currentUV` proportionally relative to the API cloud cover.
+    func applyCloudOverride(_ percent: Double) {
+        let apiTransmission = cloudTransmission(apiCloudCover)
+        let overrideTransmission = cloudTransmission(percent)
+        guard apiTransmission > 0 else { return }
+        let clearSkyUV = apiUV / apiTransmission
+        currentUV = clearSkyUV * overrideTransmission
+        currentCloudCover = percent
+        cloudCoverOverride = percent
+    }
+
+    /// Remove the override and restore API values.
+    func clearCloudOverride() {
+        guard cloudCoverOverride != nil else { return }
+        currentUV = apiUV
+        currentCloudCover = apiCloudCover
+        cloudCoverOverride = nil
+    }
+
     var shouldShowTomorrowTimes: Bool {
         guard let todaySunset = todaySunset else { return false }
         let now = Date()
@@ -258,18 +291,25 @@ class UVService: ObservableObject {
                         }
                         
                         self.currentUV = interpolatedUV
+                        self.apiUV = interpolatedUV
                     } else {
                         // Fallback: estimate current UV based on max and time of day
-                        self.currentUV = self.estimateCurrentUV(maxUV: self.maxUV, hour: hour)
+                        let estimated = self.estimateCurrentUV(maxUV: self.maxUV, hour: hour)
+                        self.currentUV = estimated
+                        self.apiUV = estimated
                     }
-                    
+
                     // Get current hour's cloud cover
                     if let cloudCover = response.hourly?.cloudCover,
                        hour < cloudCover.count {
+                        self.apiCloudCover = cloudCover[hour]
                         self.currentCloudCover = cloudCover[hour]
                         // Share with widget
                         sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
                     }
+
+                    // Clear any user override now that we have fresh API data
+                    self.cloudCoverOverride = nil
                     
                     // Calculate safe exposure times
                     self.calculateSafeExposureTimes()
@@ -627,12 +667,15 @@ class UVService: ObservableObject {
                 let hour = calendar.component(.hour, from: Date())
                 if hour < todayData.hourlyUV.count {
                     currentUV = todayData.hourlyUV[hour]
+                    apiUV = currentUV
                     if hour < todayData.hourlyCloudCover.count {
                         currentCloudCover = todayData.hourlyCloudCover[hour]
+                        apiCloudCover = currentCloudCover
                         // Share with widget
                         sharedDefaults?.set(currentCloudCover, forKey: "currentCloudCover")
                     }
                 }
+                cloudCoverOverride = nil
                 
                 maxUV = todayData.maxUV
                 todaySunrise = todayData.sunrise
