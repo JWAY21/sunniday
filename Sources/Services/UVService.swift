@@ -74,9 +74,6 @@ class UVService: ObservableObject {
     /// UV and cloud cover values as received from the API (before any user override).
     private var apiUV: Double = 0.0
     private var apiCloudCover: Double = 0.0
-    /// Clear-sky UV at the current hour, derived from the API's own clear-sky daily max.
-    /// This is a better anchor than back-calculating through any assumed cloud model.
-    private var clearSkyUV: Double = 0.0
 
     // MARK: Cloud Cover Override
 
@@ -111,10 +108,13 @@ class UVService: ObservableObject {
     }
 
     /// Apply a user-selected cloud cover override (0, 25, 50, 75, or 100).
-    /// Uses `clearSkyUV` (anchored to the API's own `uvIndexClearSkyMax`) as the
-    /// base, then applies the empirical transmission factor for the selected level.
+    /// Back-calculates clear-sky UV from the API value using the same transmission
+    /// table, then applies the override's factor — self-consistent per hour.
+    /// e.g. at 59% cloud / UV 8.2: clearSky = 8.2 / 0.623 ≈ 13.2; at 0% → 13.2
     func applyCloudOverride(_ percent: Double) {
-        guard clearSkyUV > 0 else { return }
+        let currentTransmission = cloudTransmission(apiCloudCover)
+        guard currentTransmission > 0 else { return }
+        let clearSkyUV = apiUV / currentTransmission
         currentUV = clearSkyUV * cloudTransmission(percent)
         currentCloudCover = percent
         cloudCoverOverride = percent
@@ -331,18 +331,6 @@ class UVService: ObservableObject {
                         self.currentCloudCover = cloudCover[hour]
                         // Share with widget
                         sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
-                    }
-
-                    // Derive clear-sky UV from the API's own clear-sky daily max.
-                    // Ratio: uvIndexClearSkyMax / uvIndexMax gives the true cloud factor
-                    // the API computed; scale the current hourly UV by the inverse to get
-                    // clear-sky hourly UV. Falls back to apiUV if data is missing/zero.
-                    if let clearSkyMax = response.daily.uvIndexClearSkyMax?.first,
-                       let cloudMax = response.daily.uvIndexMax.first,
-                       cloudMax > 0, clearSkyMax > 0 {
-                        self.clearSkyUV = self.apiUV * (clearSkyMax / cloudMax)
-                    } else {
-                        self.clearSkyUV = self.apiUV
                     }
 
                     // Clear any user override now that we have fresh API data
@@ -705,9 +693,6 @@ class UVService: ObservableObject {
                 if hour < todayData.hourlyUV.count {
                     currentUV = todayData.hourlyUV[hour]
                     apiUV = currentUV
-                    // No clear-sky data cached — fall back to apiUV; override will still
-                    // work but uses apiUV as the 0%-cloud estimate.
-                    clearSkyUV = currentUV
                     if hour < todayData.hourlyCloudCover.count {
                         currentCloudCover = todayData.hourlyCloudCover[hour]
                         apiCloudCover = currentCloudCover
