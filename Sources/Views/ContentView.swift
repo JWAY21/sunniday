@@ -281,7 +281,7 @@ struct ContentView: View {
     
     private var headerSection: some View {
         Button(action: { showInfoSheet = true }) {
-            Text("SUNni DAY")
+            Text("SUNniDAY")
                 .font(.system(size: 40, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
                 .tracking(2)
@@ -1158,7 +1158,7 @@ struct InfoSheet: View {
                         Text("About")
                             .font(.headline)
                         
-                        Text("SUNni Day uses a scientifically-based multi-factor model to estimate vitamin D synthesis from UV exposure.")
+                        Text("SUNniDAY uses a scientifically-based multi-factor model to estimate vitamin D synthesis from UV exposure.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         

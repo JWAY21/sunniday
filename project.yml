@@ -21,18 +21,18 @@ targets:
     info:
       path: Resources/Info.plist
       properties:
-        CFBundleDisplayName: SUNni Day
+        CFBundleDisplayName: SUNniDAY
         LSApplicationCategoryType: public.app-category.healthcare-fitness
         UILaunchStoryboardName: LaunchScreen
         UISupportedInterfaceOrientations: 
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
-        NSLocationWhenInUseUsageDescription: "SUNni Day needs your location to determine UV levels at your current position"
-        NSLocationAlwaysAndWhenInUseUsageDescription: "SUNni Day needs your location to track UV exposure throughout the day"
-        NSHealthShareUsageDescription: "SUNni Day reads your health data to provide personalized vitamin D recommendations"
-        NSHealthUpdateUsageDescription: "SUNni Day saves your vitamin D intake data to Health app"
+        NSLocationWhenInUseUsageDescription: "SUNniDAY needs your location to determine UV levels at your current position"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "SUNniDAY needs your location to track UV exposure throughout the day"
+        NSHealthShareUsageDescription: "SUNniDAY reads your health data to provide personalized vitamin D recommendations"
+        NSHealthUpdateUsageDescription: "SUNniDAY saves your vitamin D intake data to Health app"
         UIUserInterfaceStyle: Light
-        NSUserNotificationCenterUsageDescription: "SUNni Day sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
+        NSUserNotificationCenterUsageDescription: "SUNniDAY sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
         CFBundleIcons:
           CFBundlePrimaryIcon:
             CFBundleIconFiles:
@@ -77,7 +77,7 @@ targets:
     info:
       path: SundayWidget/Info.plist
       properties:
-        CFBundleDisplayName: SUNni Day Widget
+        CFBundleDisplayName: SUNniDAY Widget
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
