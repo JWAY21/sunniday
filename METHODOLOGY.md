@@ -1,8 +1,8 @@
-# Sun Day - Vitamin D Calculation Methodology
+# SUNniDAY - Vitamin D Calculation Methodology
 
 ## Overview
 
-Sun Day calculates vitamin D synthesis from UV exposure using a multi-factor model based on scientific research. The app aims to provide personalized, accurate estimates while remaining conservative for safety. See [citations](https://github.com/jackjackbits/sunday/blob/main/METHODOLOGY.md#references).
+SUNniDAY calculates vitamin D synthesis from UV exposure using a multi-factor model based on scientific research. The app aims to provide personalized, accurate estimates while remaining conservative for safety. See [citations](https://github.com/jackjackbits/sunday/blob/main/METHODOLOGY.md#references).
 
 ## Core Formula
 

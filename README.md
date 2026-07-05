@@ -1,20 +1,31 @@
-# Sun Day
+# SUNniDAY
 
-UV tracking and vitamin D calculator for iOS.
+Real-time UV tracking and vitamin D calculator for iOS.
 
-[📖 Read the detailed methodology](METHODOLOGY.md) | [🔒 Privacy Policy](PRIVACY.md)
+[📖 Methodology](METHODOLOGY.md) | [🔒 Privacy Policy](PRIVACY.md)
 
-<img height="500" alt="SunDay_1290x2796_v2" src="https://github.com/user-attachments/assets/b712cc98-1cc5-4e6f-8297-cabf8f801013" />
+SUNniDAY tells you the current UV index for your location, estimates how much
+vitamin D your body is synthesising from the sun in real time, and warns you
+before you burn — personalised to your skin type, clothing, and sunscreen.
 
 ## Features
 
 - Real-time UV index from your location
-- Vitamin D calculation based on UV, skin type, and clothing
-- Moon phase display at night
-- Sunrise/sunset times
-- Saves to Apple Health
+- Vitamin D synthesis estimate, minute by minute
+- Personal burn-limit countdown
+- Skin type, clothing & sunscreen adjustments
+- Cloud cover override to fine-tune readings
+- Log past sun exposure sessions (with historical UV)
+- Vitamin D history chart with a body-store trend line
+- Sunrise/sunset and moon phase
+- Apple Health integration
+- Home screen widget
 - No API keys required
-- Small and medium widgets for your home screen
+
+## Support
+
+Found a bug or have a feature request? Please
+[open an issue](../../issues) — that's the fastest way to reach me.
 
 ## Requirements
 
@@ -30,18 +41,18 @@ UV tracking and vitamin D calculator for iOS.
 4. Select your development team
 5. Build and run
 
-## Usage
-
-1. Allow location and health permissions
-2. Press the sun button to start tracking
-3. Select your clothing level and skin type
-4. The app calculates vitamin D intake automatically
-
 ## APIs Used
 
 - Open-Meteo for UV data (free, no key)
 - Farmsense for moon phases (free, no key)
 
+## Credits
+
+SUNniDAY is based on the open-source **Sun Day** project by
+[Jack Dorsey](https://github.com/jackjackbits/sunday), released into the
+public domain. Huge thanks for the original app and its vitamin D methodology.
+
 ## License
 
-Public domain. Use however you want.
+Released into the public domain under the [Unlicense](LICENSE), the same terms
+as the original project.

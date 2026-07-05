@@ -1255,7 +1255,7 @@ struct InfoSheet: View {
                         Text("Open Source")
                             .font(.headline)
 
-                        Text("SUNniDAY is based on Sun Day by Jack Dorsey, used under the MIT licence.")
+                        Text("SUNniDAY is based on Sun Day by Jack Dorsey, released into the public domain (Unlicense).")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
