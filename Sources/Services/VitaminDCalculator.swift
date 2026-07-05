@@ -151,7 +151,7 @@ class VitaminDCalculator: ObservableObject {
     private var lastUpdateTime: Date?
     private var lastRateUpdateTime: Date?
     private var lastRateUV: Double = -1
-    private let sharedDefaults = UserDefaults(suiteName: "group.sunday.widget")
+    private let sharedDefaults = UserDefaults(suiteName: "group.jway21.sunniday.widget")
     private var appActiveObserver: NSObjectProtocol?
     private var appBackgroundObserver: NSObjectProtocol?
     private var wasTrackingBeforeBackground = false
@@ -163,8 +163,8 @@ class VitaminDCalculator: ObservableObject {
     private let healthBaseRefreshInterval: TimeInterval = 900.0 // 15 min
     #if DEBUG
     private var sessionInterval: OSSignpostIntervalState?
-    private static let logger = Logger(subsystem: "it.sunday.app", category: "Calculator")
-    private let signposter = OSSignposter(subsystem: "it.sunday.app", category: "Calculator")
+    private static let logger = Logger(subsystem: "com.jway21.sunniday", category: "Calculator")
+    private let signposter = OSSignposter(subsystem: "com.jway21.sunniday", category: "Calculator")
     #endif
     
     // UV response curve parameters

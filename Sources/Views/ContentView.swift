@@ -795,7 +795,7 @@ struct ContentView: View {
         if uvService.currentMoonPhaseName.isEmpty {
             let defaultPhase = "Waxing Gibbous"
             uvService.currentMoonPhaseName = defaultPhase
-            UserDefaults(suiteName: "group.sunday.widget")?.set(defaultPhase, forKey: "moonPhaseName")
+            UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set(defaultPhase, forKey: "moonPhaseName")
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
