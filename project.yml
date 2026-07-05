@@ -21,18 +21,23 @@ targets:
     info:
       path: Resources/Info.plist
       properties:
-        CFBundleDisplayName: Sun Day
+        CFBundleDisplayName: SUNni Day
         LSApplicationCategoryType: public.app-category.healthcare-fitness
         UILaunchStoryboardName: LaunchScreen
         UISupportedInterfaceOrientations: 
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
-        NSLocationWhenInUseUsageDescription: "Sun Day needs your location to determine UV levels at your current position"
-        NSLocationAlwaysAndWhenInUseUsageDescription: "Sun Day needs your location to track UV exposure throughout the day"
-        NSHealthShareUsageDescription: "Sun Day reads your health data to provide personalized vitamin D recommendations"
-        NSHealthUpdateUsageDescription: "Sun Day saves your vitamin D intake data to Health app"
+        NSLocationWhenInUseUsageDescription: "SUNni Day needs your location to determine UV levels at your current position"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "SUNni Day needs your location to track UV exposure throughout the day"
+        NSHealthShareUsageDescription: "SUNni Day reads your health data to provide personalized vitamin D recommendations"
+        NSHealthUpdateUsageDescription: "SUNni Day saves your vitamin D intake data to Health app"
         UIUserInterfaceStyle: Light
-        NSUserNotificationCenterUsageDescription: "Sun Day sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
+        NSUserNotificationCenterUsageDescription: "SUNni Day sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
+        CFBundleIcons:
+          CFBundlePrimaryIcon:
+            CFBundleIconFiles:
+              - AppIcon60x60
+            CFBundleIconName: AppIcon
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - sunday
@@ -72,7 +77,7 @@ targets:
     info:
       path: SundayWidget/Info.plist
       properties:
-        CFBundleDisplayName: Sun Day Widget
+        CFBundleDisplayName: SUNni Day Widget
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

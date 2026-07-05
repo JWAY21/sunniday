@@ -5,9 +5,21 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Sun Day</string>
+	<string>SUNni Day</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon60x60</string>
+			</array>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+		</dict>
+	</dict>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,7 +29,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.2</string>
+	<string>1.0</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -34,15 +46,15 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.healthcare-fitness</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Sun Day reads your health data to provide personalized vitamin D recommendations</string>
+	<string>SUNni Day reads your health data to provide personalized vitamin D recommendations</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Sun Day saves your vitamin D intake data to Health app</string>
+	<string>SUNni Day saves your vitamin D intake data to Health app</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Sun Day needs your location to track UV exposure throughout the day</string>
+	<string>SUNni Day needs your location to track UV exposure throughout the day</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Sun Day needs your location to determine UV levels at your current position</string>
+	<string>SUNni Day needs your location to determine UV levels at your current position</string>
 	<key>NSUserNotificationCenterUsageDescription</key>
-	<string>Sun Day sends reminders for sunrise, sunset, and solar noon to help you track vitamin D</string>
+	<string>SUNni Day sends reminders for sunrise, sunset, and solar noon to help you track vitamin D</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiresFullScreen</key>
@@ -53,18 +65,5 @@
 	</array>
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>api.farmsense.net</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<false/>
-			</dict>
-		</dict>
-	</dict>
 </dict>
 </plist>
