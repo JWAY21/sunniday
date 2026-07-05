@@ -9,6 +9,8 @@ settings:
     MARKETING_VERSION: 1.0.0
     CURRENT_PROJECT_VERSION: 1
     DEVELOPMENT_TEAM: "G46528YB86"
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "Apple Development"
 targets:
   Sunday:
     type: application
@@ -42,6 +44,8 @@ targets:
         ENABLE_PREVIEWS: YES
         DEVELOPMENT_ASSET_PATHS: "Sources"
         CODE_SIGN_ENTITLEMENTS: Resources/Sunday.entitlements
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
@@ -79,6 +83,8 @@ targets:
         SKIP_INSTALL: true
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_ENTITLEMENTS: SundayWidget/SundayWidget.entitlements
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
     capabilities:
       - com.apple.ApplicationGroups:
           enabled: true
