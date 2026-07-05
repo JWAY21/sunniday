@@ -25,7 +25,7 @@ struct Provider: IntentTimelineProvider {
         var entries: [SimpleEntry] = []
         
         // Read from shared UserDefaults
-        let sharedDefaults = UserDefaults(suiteName: "group.sunday.widget")
+        let sharedDefaults = UserDefaults(suiteName: "group.jway21.sunniday.widget")
         let uvIndex = sharedDefaults?.double(forKey: "currentUV") ?? 0.0
         let todaysTotal = sharedDefaults?.double(forKey: "todaysTotal") ?? 0.0
         let isTracking = sharedDefaults?.bool(forKey: "isTracking") ?? false

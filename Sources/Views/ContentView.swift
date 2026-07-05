@@ -234,7 +234,7 @@ struct ContentView: View {
     
     private var backgroundGradient: some View {
         LinearGradient(
-            colors: currentGradientColors.isEmpty ? [Color(hex: "4a90e2"), Color(hex: "7bb7e5")] : currentGradientColors,
+            colors: currentGradientColors.isEmpty ? [Color(hex: "7c5cba"), Color(hex: "9b7fd4")] : currentGradientColors,
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -247,48 +247,48 @@ struct ContentView: View {
         let timeProgress = Double(hour) + Double(minute) / 60.0
         
         if timeProgress < 5 || timeProgress > 22 {
-            // Night (deep dark blue)
-            return [Color(hex: "0f1c3d"), Color(hex: "0a1228")]
+            // Night — soft dark indigo
+            return [Color(hex: "1a1535"), Color(hex: "110e28")]
         } else if timeProgress < 6 {
-            // Pre-dawn (dark blue transitioning)
-            return [Color(hex: "1e3a5f"), Color(hex: "2d4a7c")]
+            // Pre-dawn — muted violet
+            return [Color(hex: "2e2060"), Color(hex: "3d2d80")]
         } else if timeProgress < 6.5 {
-            // Early dawn (blue to purple)
-            return [Color(hex: "3d5a80"), Color(hex: "5c7cae")]
+            // Early dawn — soft indigo
+            return [Color(hex: "4a3898"), Color(hex: "6350b0")]
         } else if timeProgress < 7 {
-            // Dawn (purple to pink)
-            return [Color(hex: "5c7cae"), Color(hex: "ee9b7a")]
+            // Dawn — soft violet to warm amber
+            return [Color(hex: "7c5cba"), Color(hex: "c07850")]
         } else if timeProgress < 8 {
-            // Sunrise (pink to light blue)
-            return [Color(hex: "f4a261"), Color(hex: "87ceeb")]
+            // Sunrise — warm orange to soft lavender
+            return [Color(hex: "f4a261"), Color(hex: "d4b8f0")]
         } else if timeProgress < 10 {
-            // Morning (clear blue sky)
-            return [Color(hex: "5ca9d6"), Color(hex: "87ceeb")]
+            // Morning — soft violet sky
+            return [Color(hex: "8b6fc4"), Color(hex: "b09ad8")]
         } else if timeProgress < 16 {
-            // Midday (bright blue sky)
-            return [Color(hex: "4a90e2"), Color(hex: "7bb7e5")]
+            // Midday — muted violet / soft infrared
+            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
         } else if timeProgress < 17 {
-            // Late afternoon (slightly warmer blue)
-            return [Color(hex: "5ca9d6"), Color(hex: "87b8d4")]
+            // Late afternoon — light lavender
+            return [Color(hex: "8b6fc4"), Color(hex: "b09ad8")]
         } else if timeProgress < 18.5 {
-            // Golden hour (warm golden)
+            // Golden hour — warm golden (unchanged)
             return [Color(hex: "f4a261"), Color(hex: "e76f51")]
         } else if timeProgress < 19.5 {
-            // Sunset (orange to pink)
+            // Sunset — orange to deep pink
             return [Color(hex: "e76f51"), Color(hex: "c44569")]
         } else if timeProgress < 20.5 {
-            // Late sunset (pink to purple)
-            return [Color(hex: "c44569"), Color(hex: "6a4c93")]
+            // Late sunset — pink to soft violet
+            return [Color(hex: "c44569"), Color(hex: "8b6fc4")]
         } else {
-            // Dusk (purple to dark blue)
-            return [Color(hex: "6a4c93"), Color(hex: "1e3a5f")]
+            // Dusk — soft violet to dark indigo
+            return [Color(hex: "7c5cba"), Color(hex: "3d2d80")]
         }
     }
     
     private var headerSection: some View {
         ZStack {
             Button(action: { showInfoSheet = true }) {
-                Text("SUN DAY")
+                Text("SUNniDAY")
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .tracking(2)
@@ -665,7 +665,7 @@ struct ContentView: View {
             ZStack {
                 // Match the ManualExposureSheet background to avoid any white flash
                 LinearGradient(
-                    colors: [Color(hex: "4a90e2"), Color(hex: "7bb7e5")],
+                    colors: [Color(hex: "7c5cba"), Color(hex: "9b7fd4")],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -871,7 +871,7 @@ struct ContentView: View {
         if uvService.currentMoonPhaseName.isEmpty {
             let defaultPhase = "Waxing Gibbous"
             uvService.currentMoonPhaseName = defaultPhase
-            UserDefaults(suiteName: "group.sunday.widget")?.set(defaultPhase, forKey: "moonPhaseName")
+            UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set(defaultPhase, forKey: "moonPhaseName")
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
@@ -1234,7 +1234,7 @@ struct InfoSheet: View {
                         Text("About")
                             .font(.headline)
                         
-                        Text("Sun Day uses a scientifically-based multi-factor model to estimate vitamin D synthesis from UV exposure.")
+                        Text("SUNniDAY uses a scientifically-based multi-factor model to estimate vitamin D synthesis from UV exposure.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -1247,6 +1247,19 @@ struct InfoSheet: View {
                             .foregroundColor(.secondary)
                         
                         Link("View detailed methodology", destination: URL(string: "https://github.com/jackjackbits/sunday/blob/main/METHODOLOGY.md")!)
+                            .font(.caption)
+                            .foregroundColor(.blue)
+
+                        Divider()
+
+                        Text("Open Source")
+                            .font(.headline)
+
+                        Text("SUNniDAY is based on Sun Day by Jack Dorsey, used under the MIT licence.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Link("github.com/jackjackbits/sunday", destination: URL(string: "https://github.com/jackjackbits/sunday")!)
                             .font(.caption)
                             .foregroundColor(.blue)
                     }

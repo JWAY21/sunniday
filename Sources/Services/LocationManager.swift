@@ -21,7 +21,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
-    private let sharedDefaults = UserDefaults(suiteName: "group.sunday.widget")
+    private let sharedDefaults = UserDefaults(suiteName: "group.jway21.sunniday.widget")
     
     // Geocoding cache
     private var geocodeCache: [String: String] = [:]

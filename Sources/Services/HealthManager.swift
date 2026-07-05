@@ -3,7 +3,7 @@ import HealthKit
 import OSLog
 
 class HealthManager: ObservableObject {
-    private static let logger = Logger(subsystem: "it.sunday.app", category: "Health")
+    private static let logger = Logger(subsystem: "com.jway.sunniday", category: "Health")
     @Published var isAuthorized = false
     @Published var lastError: String?
     

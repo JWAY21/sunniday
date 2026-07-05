@@ -3,7 +3,7 @@ import SwiftData
 import OSLog
 
 class MigrationService {
-    private static let logger = Logger(subsystem: "it.sunday.app", category: "Migration")
+    private static let logger = Logger(subsystem: "com.jway.sunniday", category: "Migration")
     static func migrateUserDefaults(to modelContext: ModelContext) {
         // Check if migration has already been performed
         let migrationKey = "hasPerformedSwiftDataMigration"
