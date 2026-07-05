@@ -194,7 +194,7 @@ struct SmallWidgetView: View {
         } else if timeProgress < 10 {
             return [Color(hex: "fdb095"), Color(hex: "87ceeb")]
         } else if timeProgress < 17 {
-            return [Color(hex: "4a90e2"), Color(hex: "7bb7e5")]
+            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
         } else if timeProgress < 19 {
             return [Color(hex: "87ceeb"), Color(hex: "fdb095")]
         } else if timeProgress < 20.5 {
@@ -375,7 +375,7 @@ struct MediumWidgetView: View {
         } else if timeProgress < 10 {
             return [Color(hex: "fdb095"), Color(hex: "87ceeb")]
         } else if timeProgress < 17 {
-            return [Color(hex: "4a90e2"), Color(hex: "7bb7e5")]
+            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
         } else if timeProgress < 19 {
             return [Color(hex: "87ceeb"), Color(hex: "fdb095")]
         } else if timeProgress < 20.5 {
@@ -475,7 +475,7 @@ struct SundayWidget: Widget {
         IntentConfiguration(kind: kind, intent: ConfigurationIntent.self, provider: Provider()) { entry in
             SundayWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Sun Day")
+        .configurationDisplayName("SUNniDAY")
         .description("Track UV and vitamin D intake")
         .supportedFamilies([.systemSmall, .systemMedium])
     }

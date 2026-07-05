@@ -82,7 +82,7 @@ struct HistoryView: View {
         NavigationView {
             ZStack {
                 LinearGradient(
-                    colors: [Color(hex: "4a90e2"), Color(hex: "7bb7e5")],
+                    colors: [Color(hex: "7c5cba"), Color(hex: "9b7fd4")],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

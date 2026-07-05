@@ -192,7 +192,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         if !locationServicesEnabled {
             return "Location Services are disabled. Please enable Location Services in Settings > Privacy & Security > Location Services."
         } else {
-            return "Sun Day needs your location to determine UV levels and calculate vitamin D production. Please enable location access in Settings."
+            return "SUNniDAY needs your location to determine UV levels and calculate vitamin D production. Please enable location access in Settings."
         }
     }
     
