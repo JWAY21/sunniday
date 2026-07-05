@@ -1173,6 +1173,19 @@ struct InfoSheet: View {
                         Link("View detailed methodology", destination: URL(string: "https://github.com/jackjackbits/sunday/blob/main/METHODOLOGY.md")!)
                             .font(.caption)
                             .foregroundColor(.blue)
+
+                        Divider()
+
+                        Text("Open Source")
+                            .font(.headline)
+
+                        Text("SUNniDAY is based on Sun Day by Jack Dorsey, used under the MIT licence.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Link("github.com/jackjackbits/sunday", destination: URL(string: "https://github.com/jackjackbits/sunday")!)
+                            .font(.caption)
+                            .foregroundColor(.blue)
                     }
                     
                     // Current Calculation Factors
