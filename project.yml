@@ -15,7 +15,6 @@ targets:
     platform: iOS
     sources:
       - Sources
-    resources:
       - Resources/Assets.xcassets
       - Resources/LaunchScreen.storyboard
     info:
@@ -33,11 +32,6 @@ targets:
         NSHealthUpdateUsageDescription: "SUNniDAY saves your vitamin D intake data to Health app"
         UIUserInterfaceStyle: Light
         NSUserNotificationCenterUsageDescription: "SUNniDAY sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
-        CFBundleIcons:
-          CFBundlePrimaryIcon:
-            CFBundleIconFiles:
-              - AppIcon60x60
-            CFBundleIconName: AppIcon
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - sunday
@@ -72,8 +66,6 @@ targets:
     platform: iOS
     sources:
       - SundayWidget
-    resources:
-      - SundayWidget/Assets.xcassets
     info:
       path: SundayWidget/Info.plist
       properties:
