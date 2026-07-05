@@ -40,9 +40,9 @@ struct OpenMeteoResponse: Codable {
 }
 
 class UVService: ObservableObject {
-    private static let logger = Logger(subsystem: "com.jway21.sunniday", category: "UVService")
+    private static let logger = Logger(subsystem: "com.jway.sunniday", category: "UVService")
     #if DEBUG
-    private let signposter = OSSignposter(subsystem: "com.jway21.sunniday", category: "Networking")
+    private let signposter = OSSignposter(subsystem: "com.jway.sunniday", category: "Networking")
     #endif
     @Published var currentUV: Double = 0.0
     @Published var maxUV: Double = 0.0

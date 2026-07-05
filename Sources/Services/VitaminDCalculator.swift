@@ -163,8 +163,8 @@ class VitaminDCalculator: ObservableObject {
     private let healthBaseRefreshInterval: TimeInterval = 900.0 // 15 min
     #if DEBUG
     private var sessionInterval: OSSignpostIntervalState?
-    private static let logger = Logger(subsystem: "com.jway21.sunniday", category: "Calculator")
-    private let signposter = OSSignposter(subsystem: "com.jway21.sunniday", category: "Calculator")
+    private static let logger = Logger(subsystem: "com.jway.sunniday", category: "Calculator")
+    private let signposter = OSSignposter(subsystem: "com.jway.sunniday", category: "Calculator")
     #endif
     
     // UV response curve parameters
