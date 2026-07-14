@@ -33,6 +33,7 @@ targets:
         NSHealthShareUsageDescription: "SUNniDAY reads your health data to provide personalized vitamin D recommendations"
         NSHealthUpdateUsageDescription: "SUNniDAY saves your vitamin D intake data to Health app"
         UIUserInterfaceStyle: Light
+        ITSAppUsesNonExemptEncryption: false
         NSUserNotificationCenterUsageDescription: "SUNniDAY sends reminders for sunrise, sunset, and solar noon to help you track vitamin D"
         CFBundleURLTypes:
           - CFBundleURLSchemes:
