@@ -419,6 +419,27 @@ class VitaminDCalculator: ObservableObject {
         }
     }
     
+    /// Adopt a session that was started from the widget while the app was closed.
+    /// Accounting catches up from the widget's start date at the current rate on the first tick.
+    func adoptWidgetSession(startDate: Date, uvIndex: Double) {
+        guard !isInSun else { return }
+        isInSun = true
+        sessionStartTime = startDate
+        sessionVitaminD = 0.0
+        cumulativeMEDFraction = 0.0
+        lastUpdateTime = startDate
+        lastUV = uvIndex
+        startSession(uvIndex: uvIndex)
+    }
+
+    /// End the in-app session without saving — used when a widget End action
+    /// already produced the authoritative record for the same session.
+    func discardActiveSession() {
+        guard isInSun else { return }
+        isInSun = false
+        stopSession()
+    }
+
     func addManualEntry(amount: Double) {
         // Simply add the manual entry amount to today's session vitamin D
         // This will be saved to Health by the view that calls this
@@ -660,6 +681,13 @@ class VitaminDCalculator: ObservableObject {
         sharedDefaults?.set(uvService.currentUV, forKey: "currentUV")
         sharedDefaults?.set(isInSun, forKey: "isTracking")
         sharedDefaults?.set(currentVitaminDRate, forKey: "vitaminDRate")
+        sharedDefaults?.set(clothingLevel.rawValue, forKey: "clothingLevel")
+        sharedDefaults?.set(UserDefaults.standard.bool(forKey: "usesMCG"), forKey: "usesMCG")
+        if let start = sessionStartTime {
+            sharedDefaults?.set(start, forKey: "sessionStartDate")
+        } else {
+            sharedDefaults?.removeObject(forKey: "sessionStartDate")
+        }
 
         // Ensure health base is reasonably fresh
         refreshTodaysHealthBase()

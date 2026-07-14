@@ -163,6 +163,10 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
+                // Apply any Begin/End/clothing actions taken on the widget while we were away
+                WidgetSessionBridge.reconcile(calculator: vitaminDCalculator,
+                                              healthManager: healthManager,
+                                              uvService: uvService)
                 // Resume timer when app becomes active
                 timerCancellable = timer.autoconnect().sink { _ in
                     updateData()
@@ -853,6 +857,11 @@ struct ContentView: View {
         vitaminDCalculator.setUVService(uvService)
         uvService.setModelContext(modelContext)
         uvService.setNetworkMonitor(networkMonitor)
+
+        // Apply any Begin/End/clothing actions taken on the widget while the app was closed
+        WidgetSessionBridge.reconcile(calculator: vitaminDCalculator,
+                                      healthManager: healthManager,
+                                      uvService: uvService)
         
         // Fetch UV data on startup
         if let location = locationManager.location {
