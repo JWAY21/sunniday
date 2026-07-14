@@ -182,28 +182,8 @@ struct SmallWidgetView: View {
         }
     }
     
-    var gradientColors: [Color] {
-        let hour = Calendar.current.component(.hour, from: Date())
-        let minute = Calendar.current.component(.minute, from: Date())
-        let timeProgress = Double(hour) + Double(minute) / 60.0
-        
-        if timeProgress < 5 || timeProgress > 22 {
-            return [Color(hex: "0f1c3d"), Color(hex: "0a1228")]
-        } else if timeProgress < 8 {
-            return [Color(hex: "ee9b7a"), Color(hex: "fdb095")]
-        } else if timeProgress < 10 {
-            return [Color(hex: "fdb095"), Color(hex: "87ceeb")]
-        } else if timeProgress < 17 {
-            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
-        } else if timeProgress < 19 {
-            return [Color(hex: "87ceeb"), Color(hex: "fdb095")]
-        } else if timeProgress < 20.5 {
-            return [Color(hex: "ee9b7a"), Color(hex: "c44569")]
-        } else {
-            return [Color(hex: "c44569"), Color(hex: "6a4c93")]
-        }
-    }
-    
+    var gradientColors: [Color] { skyGradientColors() }
+
     func formatNumber(_ value: Double) -> String {
         if value < 1000 {
             return "\(Int(value))"
@@ -377,28 +357,8 @@ struct MediumWidgetView: View {
         }
     }
     
-    var gradientColors: [Color] {
-        let hour = Calendar.current.component(.hour, from: Date())
-        let minute = Calendar.current.component(.minute, from: Date())
-        let timeProgress = Double(hour) + Double(minute) / 60.0
-        
-        if timeProgress < 5 || timeProgress > 22 {
-            return [Color(hex: "0f1c3d"), Color(hex: "0a1228")]
-        } else if timeProgress < 8 {
-            return [Color(hex: "ee9b7a"), Color(hex: "fdb095")]
-        } else if timeProgress < 10 {
-            return [Color(hex: "fdb095"), Color(hex: "87ceeb")]
-        } else if timeProgress < 17 {
-            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
-        } else if timeProgress < 19 {
-            return [Color(hex: "87ceeb"), Color(hex: "fdb095")]
-        } else if timeProgress < 20.5 {
-            return [Color(hex: "ee9b7a"), Color(hex: "c44569")]
-        } else {
-            return [Color(hex: "c44569"), Color(hex: "6a4c93")]
-        }
-    }
-    
+    var gradientColors: [Color] { skyGradientColors() }
+
     func formatNumber(_ value: Double) -> String {
         if value < 1000 {
             return "\(Int(value))"
@@ -407,6 +367,38 @@ struct MediumWidgetView: View {
         } else {
             return String(format: "%.0fK", value / 1000)
         }
+    }
+}
+
+/// Shared time-of-day sky gradient for all SUNniDAY widgets.
+/// Peach mornings → soft blue-violet midday → sunset, so it reads like the sky
+/// while keeping a subtle violet tint as SUNniDAY's signature (softer than the
+/// old heavy purple). When a session is active it goes warm gold.
+func skyGradientColors(isTracking: Bool = false) -> [Color] {
+    if isTracking {
+        return [Color(hex: "f5a623"), Color(hex: "e8743b")]
+    }
+
+    let hour = Calendar.current.component(.hour, from: Date())
+    let minute = Calendar.current.component(.minute, from: Date())
+    let t = Double(hour) + Double(minute) / 60.0
+
+    if t < 5 || t > 22 {
+        return [Color(hex: "1a2540"), Color(hex: "121a30")]   // night
+    } else if t < 7 {
+        return [Color(hex: "e79a7c"), Color(hex: "f2b79c")]   // dawn peach
+    } else if t < 9 {
+        return [Color(hex: "f2b79c"), Color(hex: "9db8e0")]   // sunrise peach → blue
+    } else if t < 11 {
+        return [Color(hex: "8fb0e2"), Color(hex: "a7a6dd")]   // late morning blue → soft violet
+    } else if t < 16 {
+        return [Color(hex: "7f92d6"), Color(hex: "a9a3e0")]   // midday soft blue-violet (SUNniDAY tint)
+    } else if t < 18 {
+        return [Color(hex: "9db8e0"), Color(hex: "f2b79c")]   // afternoon blue → peach
+    } else if t < 20 {
+        return [Color(hex: "f2a878"), Color(hex: "d76a86")]   // golden hour → pink
+    } else {
+        return [Color(hex: "c9557a"), Color(hex: "7a5fa8")]   // dusk pink → violet
     }
 }
 

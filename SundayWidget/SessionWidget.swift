@@ -313,28 +313,10 @@ struct SessionWidgetView: View {
         }
     }
 
+    // Shared sky gradient (peach → soft blue-violet → sunset); warm gold when a
+    // session is active so Begin/End visibly change the colour.
     private func sessionGradientColors() -> [Color] {
-        // Active session — warm gold "in the sun" state so tapping Begin
-        // visibly changes the widget's colour and End returns it to normal.
-        if entry.isTracking {
-            return [Color(hex: "f5a623"), Color(hex: "e8743b")]
-        }
-
-        let hour = Calendar.current.component(.hour, from: Date())
-        let minute = Calendar.current.component(.minute, from: Date())
-        let timeProgress = Double(hour) + Double(minute) / 60.0
-
-        if timeProgress < 5 || timeProgress > 22 {
-            return [Color(hex: "1a1535"), Color(hex: "110e28")]
-        } else if timeProgress < 8 {
-            return [Color(hex: "ee9b7a"), Color(hex: "fdb095")]
-        } else if timeProgress < 17 {
-            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
-        } else if timeProgress < 20.5 {
-            return [Color(hex: "ee9b7a"), Color(hex: "c44569")]
-        } else {
-            return [Color(hex: "c44569"), Color(hex: "6a4c93")]
-        }
+        skyGradientColors(isTracking: entry.isTracking)
     }
 }
 
