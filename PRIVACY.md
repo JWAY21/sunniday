@@ -36,12 +36,6 @@ SUNniDAY is designed with your privacy in mind. We believe in transparency and w
 - **Their privacy**: No authentication required, no personal data collected
 - **More info**: https://open-meteo.com/en/terms
 
-### Farmsense API
-- **What we share**: Current timestamp only
-- **Purpose**: Display moon phase
-- **Their privacy**: No authentication required, no personal data collected
-- **More info**: https://www.farmsense.net/
-
 ## Data Storage
 
 - **All data stays on your device**

@@ -482,66 +482,39 @@ class UVService: ObservableObject {
     // Now using real-time MED tracking in VitaminDCalculator
     
     private func fetchMoonPhase(for location: CLLocation) {
-        // Use Farmsense API - completely free, no API key needed!
-        // API expects unix timestamp (uses first 10 digits)
-        let timestamp = Int(Date().timeIntervalSince1970)
-        let urlString = "http://api.farmsense.net/v1/moonphases/?d=\(timestamp)"
-        
-        guard let url = URL(string: urlString) else { 
-            return 
+        // Computed locally — the moon's phase is deterministic, no network needed.
+        // (The previously used Farmsense API no longer exists.)
+        let synodicMonth = 29.530588853 // days
+        // Reference new moon: 6 January 2000, 18:14 UTC
+        let referenceNewMoon = Date(timeIntervalSince1970: 947182440)
+        let daysSince = Date().timeIntervalSince(referenceNewMoon) / 86400.0
+        let age = daysSince.truncatingRemainder(dividingBy: synodicMonth)
+        let phaseFraction = age / synodicMonth // 0 = new, 0.5 = full
+
+        // Illuminated fraction of the disc (0–1)
+        let illumination = (1 - cos(2 * .pi * phaseFraction)) / 2
+
+        // Standard 8-phase names — matched via .contains() by the app and widget icons
+        let phaseName: String
+        switch phaseFraction {
+        case ..<0.0339, 0.9661...: phaseName = "New Moon"
+        case ..<0.2161:            phaseName = "Waxing Crescent"
+        case ..<0.2839:            phaseName = "First Quarter"
+        case ..<0.4661:            phaseName = "Waxing Gibbous"
+        case ..<0.5339:            phaseName = "Full Moon"
+        case ..<0.7161:            phaseName = "Waning Gibbous"
+        case ..<0.7839:            phaseName = "Last Quarter"
+        default:                   phaseName = "Waning Crescent"
         }
-        
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self else { return }
-            
-            if error != nil { 
-                // Set a default moon phase on error
-                DispatchQueue.main.async {
-                    self.currentMoonPhaseName = "Waxing Crescent"
-                    UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set("Waxing Crescent", forKey: "moonPhaseName")
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
-                return 
-            }
-            
-            guard let data = data else { 
-                return 
-            }
-            
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-                   let moonData = json.first {
-                    
-                    // Get illumination percentage (comes as 0-1 decimal)
-                    let illuminationValue = moonData["Illumination"] as? Double ?? 0.0
-                    
-                    DispatchQueue.main.async {
-                        // Simply use illumination value directly (0-1 scale)
-                        self.currentMoonPhase = illuminationValue
-                        
-                        // Store phase name
-                        if let phaseName = moonData["Phase"] as? String {
-                            self.currentMoonPhaseName = phaseName
-                            // Share with widget
-                            UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set(phaseName, forKey: "moonPhaseName")
-                            // Trigger widget update
-                            WidgetCenter.shared.reloadAllTimelines()
-                        }
-                        
-                        // Update last fetch time
-                        self.lastMoonPhaseUpdate = Date()
-                        
-                    }
-                }
-            } catch {
-                // Set a default moon phase on error
-                DispatchQueue.main.async {
-                    self.currentMoonPhaseName = "Waxing Crescent"
-                    UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set("Waxing Crescent", forKey: "moonPhaseName")
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
-            }
-        }.resume()
+
+        DispatchQueue.main.async {
+            self.currentMoonPhase = illumination
+            self.currentMoonPhaseName = phaseName
+            self.lastMoonPhaseUpdate = Date()
+            // Share with widget
+            UserDefaults(suiteName: "group.jway21.sunniday.widget")?.set(phaseName, forKey: "moonPhaseName")
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
     
     private func checkVitaminDWinter() {

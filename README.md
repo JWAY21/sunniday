@@ -44,7 +44,7 @@ Found a bug or have a feature request? Please
 ## APIs Used
 
 - Open-Meteo for UV data (free, no key)
-- Farmsense for moon phases (free, no key)
+- Moon phase computed locally on device
 
 ## Credits
 
