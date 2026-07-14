@@ -221,8 +221,8 @@ struct SessionWidgetView: View {
                         .multilineTextAlignment(.center)
                         .minimumScaleFactor(0.5)
                     Text(formattedSessionAmount)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.yellow)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.white)
                         .minimumScaleFactor(0.6)
                 }
                 .frame(maxWidth: .infinity)
@@ -291,6 +291,12 @@ struct SessionWidgetView: View {
     }
 
     private func sessionGradientColors() -> [Color] {
+        // Active session — warm gold "in the sun" state so tapping Begin
+        // visibly changes the widget's colour and End returns it to normal.
+        if entry.isTracking {
+            return [Color(hex: "f5a623"), Color(hex: "e8743b")]
+        }
+
         let hour = Calendar.current.component(.hour, from: Date())
         let minute = Calendar.current.component(.minute, from: Date())
         let timeProgress = Double(hour) + Double(minute) / 60.0
