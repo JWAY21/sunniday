@@ -41,8 +41,11 @@ enum WidgetSessionBridge {
                     calculator.discardActiveSession()
                 }
 
+                // Save to Health, then refresh the base from Health. Do NOT
+                // call addManualEntry here — that would add the amount to the
+                // session accumulator on top of the freshly-read Health base
+                // and double-count the banked session.
                 healthManager.saveVitaminD(amount: amount, date: start) { _ in
-                    calculator.addManualEntry(amount: amount)
                     calculator.refreshTodayTotals(forceWidget: true)
                 }
             }

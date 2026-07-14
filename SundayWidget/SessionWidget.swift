@@ -113,6 +113,7 @@ struct SessionEntry: TimelineEntry {
     let usesMCG: Bool
     let clothing: WidgetClothing
     let todayTotalIU: Double
+    let todayBaseIU: Double
 }
 
 struct SessionProvider: TimelineProvider {
@@ -127,14 +128,15 @@ struct SessionProvider: TimelineProvider {
             ratePerHour: shared?.double(forKey: "vitaminDRate") ?? 0,
             usesMCG: shared?.bool(forKey: "usesMCG") ?? false,
             clothing: WidgetClothing(rawValue: shared?.integer(forKey: "clothingLevel") ?? 1) ?? .light,
-            todayTotalIU: shared?.double(forKey: "todaysTotal") ?? 0
+            todayTotalIU: shared?.double(forKey: "todaysTotal") ?? 0,
+            todayBaseIU: shared?.double(forKey: "todaysBase") ?? 0
         )
     }
 
     func placeholder(in context: Context) -> SessionEntry {
         SessionEntry(date: Date(), uvIndex: 6.2, cloudCover: 20, isTracking: false,
                      sessionStart: nil, ratePerHour: 15000, usesMCG: false, clothing: .light,
-                     todayTotalIU: 3200)
+                     todayTotalIU: 3200, todayBaseIU: 3200)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SessionEntry) -> Void) {
@@ -179,9 +181,16 @@ struct SessionWidgetView: View {
     // Daily target: 100 mcg (= 4000 IU). The day's total turns green once hit.
     private static let dailyGoalIU: Double = 4000
 
-    private var todayReachedGoal: Bool { entry.todayTotalIU >= Self.dailyGoalIU }
+    // Live daily total: while tracking, the base (everything logged today
+    // except this session) plus the live session estimate, so it climbs in
+    // real time. When idle, the app's maintained today total.
+    private var todayTotalLiveIU: Double {
+        entry.isTracking ? entry.todayBaseIU + sessionAmountIU : entry.todayTotalIU
+    }
 
-    private var formattedTodayTotal: String { format(iu: entry.todayTotalIU) }
+    private var todayReachedGoal: Bool { todayTotalLiveIU >= Self.dailyGoalIU }
+
+    private var formattedTodayTotal: String { format(iu: todayTotalLiveIU) }
 
     private func format(iu: Double) -> String {
         if entry.usesMCG {

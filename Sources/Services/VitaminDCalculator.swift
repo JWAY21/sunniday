@@ -704,8 +704,12 @@ class VitaminDCalculator: ObservableObject {
         // Ensure health base is reasonably fresh
         refreshTodaysHealthBase()
 
-        // Compute today total without a Health read
+        // Compute today total without a Health read.
+        // `todaysBase` is everything logged today EXCLUDING the current live
+        // session; the widget adds its own live session estimate on top of it
+        // so the day's total climbs in real time without double-counting.
         let todaysTotal = todaysHealthBase + sessionVitaminD
+        sharedDefaults?.set(todaysHealthBase, forKey: "todaysBase")
         sharedDefaults?.set(todaysTotal, forKey: "todaysTotal")
 
         // Throttle widget timeline reloads
