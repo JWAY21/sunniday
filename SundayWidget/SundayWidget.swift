@@ -272,18 +272,32 @@ struct MediumWidgetView: View {
                     
                     Spacer()
                     
-                    // Right side: Button/Moon icon at top
-                    if entry.uvIndex > 0 {
-                        Link(destination: URL(string: "sunday://toggle")!) {
+                    // Right side: Button/Moon icon at top.
+                    // Interactive AppIntents — start/stop without opening the app.
+                    if entry.isTracking {
+                        Button(intent: EndSessionIntent()) {
                             VStack(spacing: 4) {
-                                Image(systemName: entry.isTracking ? "stop.circle.fill" : "sun.max.circle.fill")
+                                Image(systemName: "stop.circle.fill")
                                     .font(.system(size: 44))
                                     .foregroundColor(.white)
-                                Text(entry.isTracking ? "End" : "Begin")
+                                Text("End")
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(.white.opacity(0.8))
                             }
                         }
+                        .buttonStyle(.plain)
+                    } else if entry.uvIndex > 0 {
+                        Button(intent: BeginSessionIntent()) {
+                            VStack(spacing: 4) {
+                                Image(systemName: "sun.max.circle.fill")
+                                    .font(.system(size: 44))
+                                    .foregroundColor(.white)
+                                Text("Begin")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                        }
+                        .buttonStyle(.plain)
                     } else {
                         // Moon phase when UV is 0
                         VStack(spacing: 4) {
