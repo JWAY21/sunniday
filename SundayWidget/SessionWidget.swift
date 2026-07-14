@@ -226,17 +226,25 @@ struct SessionWidgetView: View {
                 }
                 .foregroundColor(.white.opacity(0.7))
 
-                // Daily total — turns green once the 100 mcg / 4000 IU goal is reached
-                HStack(spacing: 4) {
-                    Image(systemName: todayReachedGoal ? "checkmark.seal.fill" : "sun.max.fill")
-                        .font(.system(size: 11))
-                    Text(formattedTodayTotal)
-                        .font(.system(size: 13, weight: .bold))
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
+                // Daily total — labelled, turns green once the 100 mcg / 4000 IU goal is reached
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("TODAY")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(0.5)
+                    HStack(spacing: 4) {
+                        if todayReachedGoal {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 12))
+                        }
+                        Text(formattedTodayTotal)
+                            .font(.system(size: 15, weight: .bold))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(todayReachedGoal ? Color(hex: "34c759") : .white)
                 }
-                .foregroundColor(todayReachedGoal ? Color(hex: "34c759") : .white.opacity(0.9))
-                .padding(.top, 2)
+                .padding(.top, 4)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
