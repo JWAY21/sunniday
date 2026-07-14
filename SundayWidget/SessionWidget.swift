@@ -112,6 +112,7 @@ struct SessionEntry: TimelineEntry {
     let ratePerHour: Double
     let usesMCG: Bool
     let clothing: WidgetClothing
+    let todayTotalIU: Double
 }
 
 struct SessionProvider: TimelineProvider {
@@ -125,13 +126,15 @@ struct SessionProvider: TimelineProvider {
             sessionStart: shared?.object(forKey: "sessionStartDate") as? Date,
             ratePerHour: shared?.double(forKey: "vitaminDRate") ?? 0,
             usesMCG: shared?.bool(forKey: "usesMCG") ?? false,
-            clothing: WidgetClothing(rawValue: shared?.integer(forKey: "clothingLevel") ?? 1) ?? .light
+            clothing: WidgetClothing(rawValue: shared?.integer(forKey: "clothingLevel") ?? 1) ?? .light,
+            todayTotalIU: shared?.double(forKey: "todaysTotal") ?? 0
         )
     }
 
     func placeholder(in context: Context) -> SessionEntry {
         SessionEntry(date: Date(), uvIndex: 6.2, cloudCover: 20, isTracking: false,
-                     sessionStart: nil, ratePerHour: 15000, usesMCG: false, clothing: .light)
+                     sessionStart: nil, ratePerHour: 15000, usesMCG: false, clothing: .light,
+                     todayTotalIU: 3200)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SessionEntry) -> Void) {
@@ -171,8 +174,16 @@ struct SessionWidgetView: View {
         return entry.ratePerHour * elapsedHours
     }
 
-    private var formattedSessionAmount: String {
-        let iu = sessionAmountIU
+    private var formattedSessionAmount: String { format(iu: sessionAmountIU) }
+
+    // Daily target: 100 mcg (= 4000 IU). The day's total turns green once hit.
+    private static let dailyGoalIU: Double = 4000
+
+    private var todayReachedGoal: Bool { entry.todayTotalIU >= Self.dailyGoalIU }
+
+    private var formattedTodayTotal: String { format(iu: entry.todayTotalIU) }
+
+    private func format(iu: Double) -> String {
         if entry.usesMCG {
             let mcg = iu / 40.0
             return mcg < 10 ? String(format: "%.1f mcg", mcg) : "\(Int(mcg)) mcg"
@@ -189,13 +200,13 @@ struct SessionWidgetView: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            // Left: UV + cloud cover (spot obviously-wrong data at a glance)
+            // Left: UV + cloud cover (spot obviously-wrong data at a glance) + today's total
             VStack(alignment: .leading, spacing: 4) {
                 Text("UV INDEX")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.white.opacity(0.7))
                 Text(String(format: "%.1f", entry.uvIndex))
-                    .font(.system(size: 42, weight: .bold))
+                    .font(.system(size: 38, weight: .bold))
                     .foregroundColor(.white)
                     .minimumScaleFactor(0.6)
                 HStack(spacing: 4) {
@@ -205,6 +216,18 @@ struct SessionWidgetView: View {
                         .font(.system(size: 11, weight: .medium))
                 }
                 .foregroundColor(.white.opacity(0.7))
+
+                // Daily total — turns green once the 100 mcg / 4000 IU goal is reached
+                HStack(spacing: 4) {
+                    Image(systemName: todayReachedGoal ? "checkmark.seal.fill" : "sun.max.fill")
+                        .font(.system(size: 11))
+                    Text(formattedTodayTotal)
+                        .font(.system(size: 13, weight: .bold))
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                }
+                .foregroundColor(todayReachedGoal ? Color(hex: "34c759") : .white.opacity(0.9))
+                .padding(.top, 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 

@@ -278,9 +278,10 @@ class VitaminDCalculator: ObservableObject {
         }
         
         lastUV = uvIndex
-        
+
         // Save initial session state
         saveActiveSession()
+        writeSessionState()
         #if DEBUG
         let state = signposter.beginInterval("Session")
         sessionInterval = state
@@ -310,8 +311,9 @@ class VitaminDCalculator: ObservableObject {
         
         // Clear saved session state
         saveActiveSession()
-        
-        // Update widget data (force reload once on stop)
+
+        // Authoritative "not tracking" write, then refresh the rest
+        writeSessionState()
         updateWidgetData(force: true)
         #if DEBUG
         if let state = sessionInterval {
@@ -321,7 +323,19 @@ class VitaminDCalculator: ObservableObject {
         Self.logger.debug("Session stop")
         #endif
     }
-    
+
+    /// The single source that writes tracking flag + session start to the app
+    /// group. Only the session lifecycle calls this, so periodic widget
+    /// refreshes can never flip a widget-initiated session off.
+    private func writeSessionState() {
+        sharedDefaults?.set(isInSun, forKey: "isTracking")
+        if isInSun, let start = sessionStartTime {
+            sharedDefaults?.set(start, forKey: "sessionStartDate")
+        } else {
+            sharedDefaults?.removeObject(forKey: "sessionStartDate")
+        }
+    }
+
     func updateUV(_ uvIndex: Double) {
         lastUV = uvIndex
         updateVitaminDRate(uvIndex: uvIndex)
@@ -676,18 +690,16 @@ class VitaminDCalculator: ObservableObject {
 
     private func updateWidgetData(force: Bool) {
         guard let uvService = uvService else { return }
-        
-        // Cache latest simple values for widget
+
+        // Cache latest simple values for widget.
+        // NOTE: isTracking / sessionStartDate are written ONLY by the session
+        // lifecycle methods (writeSessionState), never here — otherwise a
+        // periodic refresh could clobber a session the widget just started
+        // before the app has reconciled it.
         sharedDefaults?.set(uvService.currentUV, forKey: "currentUV")
-        sharedDefaults?.set(isInSun, forKey: "isTracking")
         sharedDefaults?.set(currentVitaminDRate, forKey: "vitaminDRate")
         sharedDefaults?.set(clothingLevel.rawValue, forKey: "clothingLevel")
         sharedDefaults?.set(UserDefaults.standard.bool(forKey: "usesMCG"), forKey: "usesMCG")
-        if let start = sessionStartTime {
-            sharedDefaults?.set(start, forKey: "sessionStartDate")
-        } else {
-            sharedDefaults?.removeObject(forKey: "sessionStartDate")
-        }
 
         // Ensure health base is reasonably fresh
         refreshTodaysHealthBase()
