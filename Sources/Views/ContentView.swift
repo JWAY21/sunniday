@@ -238,7 +238,7 @@ struct ContentView: View {
     
     private var backgroundGradient: some View {
         LinearGradient(
-            colors: currentGradientColors.isEmpty ? [Color(hex: "7c5cba"), Color(hex: "9b7fd4")] : currentGradientColors,
+            colors: currentGradientColors.isEmpty ? [Color(hex: "7f92d6"), Color(hex: "a9a3e0")] : currentGradientColors,
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -246,46 +246,37 @@ struct ContentView: View {
     }
     
     private var gradientColors: [Color] {
+        // Softer sky palette shared with the widgets: peach dawn → soft
+        // blue-violet midday → sunset/dusk. Keeps a subtle violet tint as
+        // SUNniDAY's signature without heavy purple.
         let hour = Calendar.current.component(.hour, from: Date())
         let minute = Calendar.current.component(.minute, from: Date())
         let timeProgress = Double(hour) + Double(minute) / 60.0
-        
+
         if timeProgress < 5 || timeProgress > 22 {
             // Night — soft dark indigo
-            return [Color(hex: "1a1535"), Color(hex: "110e28")]
-        } else if timeProgress < 6 {
-            // Pre-dawn — muted violet
-            return [Color(hex: "2e2060"), Color(hex: "3d2d80")]
-        } else if timeProgress < 6.5 {
-            // Early dawn — soft indigo
-            return [Color(hex: "4a3898"), Color(hex: "6350b0")]
+            return [Color(hex: "1a2540"), Color(hex: "121a30")]
         } else if timeProgress < 7 {
-            // Dawn — soft violet to warm amber
-            return [Color(hex: "7c5cba"), Color(hex: "c07850")]
-        } else if timeProgress < 8 {
-            // Sunrise — warm orange to soft lavender
-            return [Color(hex: "f4a261"), Color(hex: "d4b8f0")]
-        } else if timeProgress < 10 {
-            // Morning — soft violet sky
-            return [Color(hex: "8b6fc4"), Color(hex: "b09ad8")]
+            // Dawn — peach
+            return [Color(hex: "e79a7c"), Color(hex: "f2b79c")]
+        } else if timeProgress < 9 {
+            // Sunrise — peach to soft blue
+            return [Color(hex: "f2b79c"), Color(hex: "9db8e0")]
+        } else if timeProgress < 11 {
+            // Late morning — blue to soft violet
+            return [Color(hex: "8fb0e2"), Color(hex: "a7a6dd")]
         } else if timeProgress < 16 {
-            // Midday — muted violet / soft infrared
-            return [Color(hex: "7c5cba"), Color(hex: "9b7fd4")]
-        } else if timeProgress < 17 {
-            // Late afternoon — light lavender
-            return [Color(hex: "8b6fc4"), Color(hex: "b09ad8")]
-        } else if timeProgress < 18.5 {
-            // Golden hour — warm golden (unchanged)
-            return [Color(hex: "f4a261"), Color(hex: "e76f51")]
-        } else if timeProgress < 19.5 {
-            // Sunset — orange to deep pink
-            return [Color(hex: "e76f51"), Color(hex: "c44569")]
-        } else if timeProgress < 20.5 {
-            // Late sunset — pink to soft violet
-            return [Color(hex: "c44569"), Color(hex: "8b6fc4")]
+            // Midday — soft blue-violet (SUNniDAY signature tint)
+            return [Color(hex: "7f92d6"), Color(hex: "a9a3e0")]
+        } else if timeProgress < 18 {
+            // Afternoon — blue to peach
+            return [Color(hex: "9db8e0"), Color(hex: "f2b79c")]
+        } else if timeProgress < 20 {
+            // Golden hour — warm peach to pink
+            return [Color(hex: "f2a878"), Color(hex: "d76a86")]
         } else {
-            // Dusk — soft violet to dark indigo
-            return [Color(hex: "7c5cba"), Color(hex: "3d2d80")]
+            // Dusk — pink to soft violet
+            return [Color(hex: "c9557a"), Color(hex: "7a5fa8")]
         }
     }
     
@@ -669,7 +660,7 @@ struct ContentView: View {
             ZStack {
                 // Match the ManualExposureSheet background to avoid any white flash
                 LinearGradient(
-                    colors: [Color(hex: "7c5cba"), Color(hex: "9b7fd4")],
+                    colors: [Color(hex: "7f92d6"), Color(hex: "a9a3e0")],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
