@@ -329,8 +329,11 @@ class UVService: ObservableObject {
                        hour < cloudCover.count {
                         self.apiCloudCover = cloudCover[hour]
                         self.currentCloudCover = cloudCover[hour]
-                        // Share with widget
+                        // Share with widget (incl. forecast baseline for the widget's cloud override)
                         sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
+                        sharedDefaults?.set(self.apiCloudCover, forKey: "forecastCloudCover")
+                        sharedDefaults?.set(self.apiUV, forKey: "forecastUV")
+                        sharedDefaults?.removeObject(forKey: "cloudOverride")
                     }
 
                     // Clear any user override now that we have fresh API data
@@ -669,8 +672,11 @@ class UVService: ObservableObject {
                     if hour < todayData.hourlyCloudCover.count {
                         currentCloudCover = todayData.hourlyCloudCover[hour]
                         apiCloudCover = currentCloudCover
-                        // Share with widget
+                        // Share with widget (incl. forecast baseline for the widget's cloud override)
                         sharedDefaults?.set(currentCloudCover, forKey: "currentCloudCover")
+                        sharedDefaults?.set(apiCloudCover, forKey: "forecastCloudCover")
+                        sharedDefaults?.set(apiUV, forKey: "forecastUV")
+                        sharedDefaults?.removeObject(forKey: "cloudOverride")
                     }
                 }
                 cloudCoverOverride = nil

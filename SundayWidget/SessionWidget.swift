@@ -112,6 +112,61 @@ struct CycleClothingIntent: AppIntent {
     }
 }
 
+/// WMO cloud transmission (matches UVService.cloudTransmission) so the widget
+/// can recompute UV instantly when the cloud override changes.
+func widgetCloudTransmission(_ pct: Double) -> Double {
+    let points: [(Double, Double)] = [(0, 1.00), (25, 0.90), (50, 0.72), (75, 0.45), (100, 0.17)]
+    if pct <= 0 { return 1.00 }
+    if pct >= 100 { return 0.17 }
+    for i in 0..<points.count - 1 {
+        let (x0, y0) = points[i]; let (x1, y1) = points[i + 1]
+        if pct <= x1 { let t = (pct - x0) / (x1 - x0); return y0 + t * (y1 - y0) }
+    }
+    return 0.17
+}
+
+/// Tapping the clouds cycles the cloud-cover override: forecast → 0 → 25 → 50
+/// → 75 → 100 → forecast. Recomputes UV live from the forecast baseline; the
+/// app applies the same override on next foreground so everything agrees.
+struct CycleCloudOverrideIntent: AppIntent {
+    static var title: LocalizedStringResource = "Adjust Cloud Cover"
+    static var description = IntentDescription("Fine-tune the cloud cover used for UV.")
+
+    private static let presets: [Double] = [0, 25, 50, 75, 100]
+
+    func perform() async throws -> some IntentResult {
+        guard let shared = sharedDefaults() else { return .result() }
+        let forecastUV = shared.double(forKey: "forecastUV")
+        let forecastCloud = shared.double(forKey: "forecastCloudCover")
+
+        let hasOverride = shared.object(forKey: "cloudOverride") != nil
+        let current = shared.double(forKey: "cloudOverride")
+
+        if !hasOverride {
+            apply(0, shared: shared, forecastUV: forecastUV, forecastCloud: forecastCloud)
+        } else if let idx = Self.presets.firstIndex(where: { abs($0 - current) < 0.5 }),
+                  idx < Self.presets.count - 1 {
+            apply(Self.presets[idx + 1], shared: shared, forecastUV: forecastUV, forecastCloud: forecastCloud)
+        } else {
+            // Wrap back to the real forecast
+            shared.removeObject(forKey: "cloudOverride")
+            shared.set(forecastCloud, forKey: "currentCloudCover")
+            shared.set(forecastUV, forKey: "currentUV")
+            shared.set("clear", forKey: "cloudCommand")
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+
+    private func apply(_ pct: Double, shared: UserDefaults, forecastUV: Double, forecastCloud: Double) {
+        let clearSky = forecastUV / max(widgetCloudTransmission(forecastCloud), 0.0001)
+        shared.set(pct, forKey: "cloudOverride")
+        shared.set(pct, forKey: "currentCloudCover")
+        shared.set(clearSky * widgetCloudTransmission(pct), forKey: "currentUV")
+        shared.set(String(Int(pct)), forKey: "cloudCommand")
+    }
+}
+
 // MARK: - Timeline
 
 struct SessionEntry: TimelineEntry {
@@ -218,34 +273,31 @@ struct SessionWidgetView: View {
         return String(format: "%.0fK IU", iu / 1000)
     }
 
-    // One aligned stat line: fixed-width icon + fixed-width label + value,
-    // so CLOUDS/TODAY (and their values) line up in tidy columns.
-    private func statRow(icon: String, label: String, value: String, showTick: Bool = false) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.65))
-                .frame(width: 14, alignment: .center)
+    // A stacked stat: label on top, value below (used for CLOUDS and TODAY).
+    private func stackedStat(label: String, value: String, showTick: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.6))
-                .frame(width: 46, alignment: .leading)
-            Text(value)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-            if showTick {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 13))
-                    .foregroundColor(Color(hex: "3ad16a"))
+                .foregroundColor(.white.opacity(0.65))
+                .tracking(0.4)
+            HStack(spacing: 4) {
+                Text(value)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                if showTick {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(hex: "3ad16a"))
+                }
             }
         }
     }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            // Left: big centred UV hero over an aligned stat table
+            // Left: big centred UV hero over two stacked stats (clouds · today)
             VStack(alignment: .center, spacing: 8) {
                 VStack(spacing: 0) {
                     Text("UV INDEX")
@@ -253,20 +305,22 @@ struct SessionWidgetView: View {
                         .foregroundColor(.white.opacity(0.7))
                         .tracking(0.6)
                     Text(String(format: "%.1f", entry.uvIndex))
-                        .font(.system(size: 80, weight: .bold))
+                        .font(.system(size: 85, weight: .bold))
                         .foregroundColor(.white)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    statRow(icon: "cloud.fill",
-                            label: "CLOUDS",
-                            value: "\(Int(entry.cloudCover))%")
-                    statRow(icon: "sun.max.fill",
-                            label: "TODAY",
-                            value: formattedTodayTotal,
-                            showTick: todayReachedGoal)
+                HStack(alignment: .top, spacing: 18) {
+                    // CLOUDS — tap to fine-tune the cloud cover / UV
+                    Button(intent: CycleCloudOverrideIntent()) {
+                        stackedStat(label: "CLOUDS", value: "\(Int(entry.cloudCover))%")
+                    }
+                    .buttonStyle(.plain)
+
+                    stackedStat(label: "TODAY",
+                                value: formattedTodayTotal,
+                                showTick: todayReachedGoal)
                 }
             }
             .frame(maxWidth: .infinity)
