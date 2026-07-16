@@ -210,41 +210,42 @@ struct SessionWidgetView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             // Left: UV + cloud cover (spot obviously-wrong data at a glance) + today's total
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text("UV INDEX")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.75))
                 Text(String(format: "%.1f", entry.uvIndex))
-                    .font(.system(size: 38, weight: .bold))
+                    .font(.system(size: 46, weight: .bold))
                     .foregroundColor(.white)
                     .minimumScaleFactor(0.6)
                 HStack(spacing: 4) {
                     Image(systemName: "cloud.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: 12))
                     Text("\(Int(entry.cloudCover))% clouds")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.white.opacity(0.75))
 
-                // Daily total — labelled, turns green once the 100 mcg / 4000 IU goal is reached
+                // Daily total — value stays white for readability; a green tick
+                // appears after it once the 100 mcg / 4000 IU goal is reached.
                 VStack(alignment: .leading, spacing: 1) {
                     Text("TODAY")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.6))
-                        .tracking(0.5)
-                    HStack(spacing: 4) {
-                        if todayReachedGoal {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 12))
-                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.75))
+                    HStack(spacing: 5) {
                         Text(formattedTodayTotal)
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 19, weight: .bold))
+                            .foregroundColor(.white)
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
+                        if todayReachedGoal {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 15))
+                                .foregroundColor(Color(hex: "3ad16a"))
+                        }
                     }
-                    .foregroundColor(todayReachedGoal ? Color(hex: "34c759") : .white)
                 }
-                .padding(.top, 4)
+                .padding(.top, 3)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -304,6 +305,8 @@ struct SessionWidgetView: View {
                         Image(systemName: "sun.max.circle.fill")
                             .font(.system(size: 44))
                             .foregroundColor(.white)
+                            .shadow(color: Color(hex: "f5c842").opacity(0.9), radius: 6)
+                            .shadow(color: Color(hex: "f5c842").opacity(0.6), radius: 12)
                         Text("Begin")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.white.opacity(0.8))

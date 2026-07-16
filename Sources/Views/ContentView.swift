@@ -529,6 +529,11 @@ struct ContentView: View {
                 .padding(.vertical, 20)
                 .background(vitaminDCalculator.isInSun ? Color.yellow.opacity(0.3) : Color.black.opacity(0.2))
                 .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color(hex: "f5c842"), lineWidth: 1.5)
+                )
+                .shadow(color: Color(hex: "f5c842").opacity(0.5), radius: 8)
                 .animation(.easeInOut(duration: 0.3), value: vitaminDCalculator.isInSun)
             }
             .disabled(uvService.currentUV == 0 && !vitaminDCalculator.isInSun)
@@ -551,6 +556,11 @@ struct ContentView: View {
                 .padding(.vertical, 20)
                 .background(Color.black.opacity(0.2))
                 .cornerRadius(15)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color(hex: "f5c842"), lineWidth: 1.5)
+                )
+                .shadow(color: Color(hex: "f5c842").opacity(0.5), radius: 8)
             }
             .disabled(vitaminDCalculator.isInSun)
             .opacity(vitaminDCalculator.isInSun ? 0.4 : 1.0)
