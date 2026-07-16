@@ -29,6 +29,17 @@ enum WidgetClothing: Int, CaseIterable {
         }
     }
 
+    /// SF Symbol representing the coverage level.
+    var icon: String {
+        switch self {
+        case .none:     return "figure.stand"       // bare figure
+        case .minimal:  return "figure.pool.swim"   // swimwear
+        case .light:    return "tshirt.fill"        // shorts & tee
+        case .moderate: return "figure.walk"        // pants & shirt
+        case .heavy:    return "coat"               // long sleeves & long pants
+        }
+    }
+
     var next: WidgetClothing {
         let all = WidgetClothing.allCases
         let index = all.firstIndex(of: self) ?? 2
@@ -207,47 +218,58 @@ struct SessionWidgetView: View {
         return String(format: "%.0fK IU", iu / 1000)
     }
 
+    // One aligned stat line: fixed-width icon + fixed-width label + value,
+    // so CLOUDS/TODAY (and their values) line up in tidy columns.
+    private func statRow(icon: String, label: String, value: String, showTick: Bool = false) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.65))
+                .frame(width: 14, alignment: .center)
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.white.opacity(0.6))
+                .frame(width: 46, alignment: .leading)
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            if showTick {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "3ad16a"))
+            }
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            // Left: UV + cloud cover (spot obviously-wrong data at a glance) + today's total
-            VStack(alignment: .leading, spacing: 5) {
-                Text("UV INDEX")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.75))
-                Text(String(format: "%.1f", entry.uvIndex))
-                    .font(.system(size: 46, weight: .bold))
-                    .foregroundColor(.white)
-                    .minimumScaleFactor(0.6)
-                HStack(spacing: 4) {
-                    Image(systemName: "cloud.fill")
-                        .font(.system(size: 12))
-                    Text("\(Int(entry.cloudCover))% clouds")
-                        .font(.system(size: 13, weight: .medium))
+            // Left: big centred UV hero over an aligned stat table
+            VStack(alignment: .center, spacing: 8) {
+                VStack(spacing: 0) {
+                    Text("UV INDEX")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.7))
+                        .tracking(0.6)
+                    Text(String(format: "%.1f", entry.uvIndex))
+                        .font(.system(size: 80, weight: .bold))
+                        .foregroundColor(.white)
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
                 }
-                .foregroundColor(.white.opacity(0.75))
 
-                // Daily total — value stays white for readability; a green tick
-                // appears after it once the 100 mcg / 4000 IU goal is reached.
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("TODAY")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.75))
-                    HStack(spacing: 5) {
-                        Text(formattedTodayTotal)
-                            .font(.system(size: 19, weight: .bold))
-                            .foregroundColor(.white)
-                            .minimumScaleFactor(0.6)
-                            .lineLimit(1)
-                        if todayReachedGoal {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 15))
-                                .foregroundColor(Color(hex: "3ad16a"))
-                        }
-                    }
+                VStack(alignment: .leading, spacing: 8) {
+                    statRow(icon: "cloud.fill",
+                            label: "CLOUDS",
+                            value: "\(Int(entry.cloudCover))%")
+                    statRow(icon: "sun.max.fill",
+                            label: "TODAY",
+                            value: formattedTodayTotal,
+                            showTick: todayReachedGoal)
                 }
-                .padding(.top, 3)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
 
             // Middle: clothing selector (idle) or live counter (tracking)
             if entry.isTracking, let start = entry.sessionStart {
@@ -273,7 +295,7 @@ struct SessionWidgetView: View {
                         Text("CLOTHING")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.white.opacity(0.7))
-                        Image(systemName: "tshirt.fill")
+                        Image(systemName: entry.clothing.icon)
                             .font(.system(size: 22))
                             .foregroundColor(.white)
                         Text(entry.clothing.shortName)
