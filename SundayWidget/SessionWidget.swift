@@ -112,61 +112,6 @@ struct CycleClothingIntent: AppIntent {
     }
 }
 
-/// WMO cloud transmission (matches UVService.cloudTransmission) so the widget
-/// can recompute UV instantly when the cloud override changes.
-func widgetCloudTransmission(_ pct: Double) -> Double {
-    let points: [(Double, Double)] = [(0, 1.00), (25, 0.90), (50, 0.72), (75, 0.45), (100, 0.17)]
-    if pct <= 0 { return 1.00 }
-    if pct >= 100 { return 0.17 }
-    for i in 0..<points.count - 1 {
-        let (x0, y0) = points[i]; let (x1, y1) = points[i + 1]
-        if pct <= x1 { let t = (pct - x0) / (x1 - x0); return y0 + t * (y1 - y0) }
-    }
-    return 0.17
-}
-
-/// Tapping the clouds cycles the cloud-cover override: forecast → 0 → 25 → 50
-/// → 75 → 100 → forecast. Recomputes UV live from the forecast baseline; the
-/// app applies the same override on next foreground so everything agrees.
-struct CycleCloudOverrideIntent: AppIntent {
-    static var title: LocalizedStringResource = "Adjust Cloud Cover"
-    static var description = IntentDescription("Fine-tune the cloud cover used for UV.")
-
-    private static let presets: [Double] = [0, 25, 50, 75, 100]
-
-    func perform() async throws -> some IntentResult {
-        guard let shared = sharedDefaults() else { return .result() }
-        let forecastUV = shared.double(forKey: "forecastUV")
-        let forecastCloud = shared.double(forKey: "forecastCloudCover")
-
-        let hasOverride = shared.object(forKey: "cloudOverride") != nil
-        let current = shared.double(forKey: "cloudOverride")
-
-        if !hasOverride {
-            apply(0, shared: shared, forecastUV: forecastUV, forecastCloud: forecastCloud)
-        } else if let idx = Self.presets.firstIndex(where: { abs($0 - current) < 0.5 }),
-                  idx < Self.presets.count - 1 {
-            apply(Self.presets[idx + 1], shared: shared, forecastUV: forecastUV, forecastCloud: forecastCloud)
-        } else {
-            // Wrap back to the real forecast
-            shared.removeObject(forKey: "cloudOverride")
-            shared.set(forecastCloud, forKey: "currentCloudCover")
-            shared.set(forecastUV, forKey: "currentUV")
-            shared.set("clear", forKey: "cloudCommand")
-        }
-        WidgetCenter.shared.reloadAllTimelines()
-        return .result()
-    }
-
-    private func apply(_ pct: Double, shared: UserDefaults, forecastUV: Double, forecastCloud: Double) {
-        let clearSky = forecastUV / max(widgetCloudTransmission(forecastCloud), 0.0001)
-        shared.set(pct, forKey: "cloudOverride")
-        shared.set(pct, forKey: "currentCloudCover")
-        shared.set(clearSky * widgetCloudTransmission(pct), forKey: "currentUV")
-        shared.set(String(Int(pct)), forKey: "cloudCommand")
-    }
-}
-
 // MARK: - Timeline
 
 struct SessionEntry: TimelineEntry {
@@ -273,132 +218,41 @@ struct SessionWidgetView: View {
         return String(format: "%.0fK IU", iu / 1000)
     }
 
-    // A stacked stat: label on top, value below (used for CLOUDS and TODAY).
-    private func stackedStat(label: String, value: String, showTick: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.65))
-                .tracking(0.4)
-            HStack(spacing: 4) {
-                Text(value)
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(.white)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                if showTick {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 13))
-                        .foregroundColor(Color(hex: "3ad16a"))
-                }
-            }
-        }
-    }
-
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            // Left: big centred UV hero over two stacked stats (clouds · today)
-            VStack(alignment: .center, spacing: 8) {
-                VStack(spacing: 0) {
-                    Text("UV INDEX")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.7))
-                        .tracking(0.6)
-                    Text(String(format: "%.1f", entry.uvIndex))
-                        .font(.system(size: 85, weight: .bold))
-                        .foregroundColor(.white)
-                        .minimumScaleFactor(0.5)
+        HStack(alignment: .center, spacing: 14) {
+            // Left: big UV hero with clouds beneath — now has the whole column
+            VStack(alignment: .center, spacing: 6) {
+                Text("UV INDEX")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
+                    .tracking(0.6)
+                Text(String(format: "%.1f", entry.uvIndex))
+                    .font(.system(size: 85, weight: .bold))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Image(systemName: "cloud.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.75))
+                    Text("\(Int(entry.cloudCover))% clouds")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.9))
+                        .minimumScaleFactor(0.7)
                         .lineLimit(1)
-                }
-
-                HStack(alignment: .top, spacing: 18) {
-                    // CLOUDS — tap to fine-tune the cloud cover / UV
-                    Button(intent: CycleCloudOverrideIntent()) {
-                        stackedStat(label: "CLOUDS", value: "\(Int(entry.cloudCover))%")
-                    }
-                    .buttonStyle(.plain)
-
-                    stackedStat(label: "TODAY",
-                                value: formattedTodayTotal,
-                                showTick: todayReachedGoal)
                 }
             }
             .frame(maxWidth: .infinity)
 
-            // Middle: clothing selector (idle) or live counter (tracking)
-            if entry.isTracking, let start = entry.sessionStart {
-                VStack(spacing: 4) {
-                    Text("SESSION")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                    Text(timerInterval: start...start.addingTimeInterval(12 * 3600),
-                         countsDown: false)
-                        .font(.system(size: 26, weight: .bold).monospacedDigit())
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.5)
-                    Text(formattedSessionAmount)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                        .minimumScaleFactor(0.6)
+            // Right: clothing + begin/end on top, TODAY spanning underneath
+            VStack(spacing: 10) {
+                HStack(alignment: .center, spacing: 12) {
+                    clothingOrCounter
+                    beginOrEnd
                 }
-                .frame(maxWidth: .infinity)
-            } else {
-                Button(intent: CycleClothingIntent()) {
-                    VStack(spacing: 4) {
-                        Text("CLOTHING")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                        Image(systemName: entry.clothing.icon)
-                            .font(.system(size: 22))
-                            .foregroundColor(.white)
-                        Text(entry.clothing.shortName)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
+                todayFooter
             }
-
-            // Right: Begin / End
-            if entry.isTracking {
-                Button(intent: EndSessionIntent()) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "stop.circle.fill")
-                            .font(.system(size: 44))
-                            .foregroundColor(.white)
-                        Text("End")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-                .buttonStyle(.plain)
-            } else if entry.uvIndex > 0 {
-                Button(intent: BeginSessionIntent()) {
-                    VStack(spacing: 4) {
-                        Image(systemName: "sun.max.circle.fill")
-                            .font(.system(size: 44))
-                            .foregroundColor(.white)
-                            .shadow(color: Color(hex: "f5c842").opacity(0.9), radius: 6)
-                            .shadow(color: Color(hex: "f5c842").opacity(0.6), radius: 12)
-                        Text("Begin")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-                .buttonStyle(.plain)
-            } else {
-                VStack(spacing: 4) {
-                    Image(systemName: "moon.stars.fill")
-                        .font(.system(size: 36))
-                        .foregroundColor(.white.opacity(0.7))
-                    Text("No UV")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-            }
+            .frame(maxWidth: .infinity)
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -406,6 +260,107 @@ struct SessionWidgetView: View {
             LinearGradient(colors: sessionGradientColors(),
                            startPoint: .topLeading,
                            endPoint: .bottomTrailing)
+        }
+    }
+
+    // Clothing selector (idle) or live session counter (tracking)
+    @ViewBuilder private var clothingOrCounter: some View {
+        if entry.isTracking, let start = entry.sessionStart {
+            VStack(spacing: 4) {
+                Text("SESSION")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                Text(timerInterval: start...start.addingTimeInterval(12 * 3600),
+                     countsDown: false)
+                    .font(.system(size: 24, weight: .bold).monospacedDigit())
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.5)
+                Text(formattedSessionAmount)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.6)
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            Button(intent: CycleClothingIntent()) {
+                VStack(spacing: 4) {
+                    Text("CLOTHING")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                    Image(systemName: entry.clothing.icon)
+                        .font(.system(size: 22))
+                        .foregroundColor(.white)
+                    Text(entry.clothing.shortName)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder private var beginOrEnd: some View {
+        if entry.isTracking {
+            Button(intent: EndSessionIntent()) {
+                VStack(spacing: 4) {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                    Text("End")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+        } else if entry.uvIndex > 0 {
+            Button(intent: BeginSessionIntent()) {
+                VStack(spacing: 4) {
+                    Image(systemName: "sun.max.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                        .shadow(color: Color(hex: "f5c842").opacity(0.9), radius: 6)
+                        .shadow(color: Color(hex: "f5c842").opacity(0.6), radius: 12)
+                    Text("Begin")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.plain)
+        } else {
+            VStack(spacing: 4) {
+                Image(systemName: "moon.stars.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(.white.opacity(0.7))
+                Text("No UV")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    // TODAY total, spanning the full width under clothing + begin
+    private var todayFooter: some View {
+        HStack(spacing: 6) {
+            Text("TODAY")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.white.opacity(0.65))
+                .tracking(0.4)
+            Text(formattedTodayTotal)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+            if todayReachedGoal {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "3ad16a"))
+            }
         }
     }
 

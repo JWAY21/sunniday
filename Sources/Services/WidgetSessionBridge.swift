@@ -27,20 +27,6 @@ enum WidgetSessionBridge {
             shared.set(false, forKey: "widgetClothingChanged")
         }
 
-        // 1b. Cloud cover overridden from the widget — apply it in the app so
-        // UV, rate and the widget all agree.
-        if let cloudCmd = shared.string(forKey: "cloudCommand") {
-            if cloudCmd == "clear" {
-                uvService.clearCloudOverride()
-            } else if let pct = Double(cloudCmd) {
-                uvService.applyCloudOverride(pct)
-            }
-            shared.set(uvService.currentUV, forKey: "currentUV")
-            shared.set(uvService.currentCloudCover, forKey: "currentCloudCover")
-            shared.removeObject(forKey: "cloudCommand")
-            WidgetCenter.shared.reloadAllTimelines()
-        }
-
         // 2. Sessions ended from the widget — the widget's estimate is authoritative
         if let pending = shared.array(forKey: "pendingWidgetSessions") as? [[String: Any]] {
             for record in pending {

@@ -46,6 +46,9 @@ class UVService: ObservableObject {
     #endif
     @Published var currentUV: Double = 0.0
     @Published var maxUV: Double = 0.0
+    /// Today's clear-sky max UV from the API — the physical ceiling for any
+    /// cloud-override back-calculation (prevents absurd inflated values).
+    private var clearSkyMaxUV: Double = 0.0
     @Published var tomorrowMaxUV: Double = 0.0
     @Published var isLoading = false
     @Published var lastError: String?
@@ -114,7 +117,12 @@ class UVService: ObservableObject {
     func applyCloudOverride(_ percent: Double) {
         let currentTransmission = cloudTransmission(apiCloudCover)
         guard currentTransmission > 0 else { return }
-        let clearSkyUV = apiUV / currentTransmission
+        // Back-calculate clear-sky UV, but never let it exceed the day's real
+        // clear-sky ceiling. Open-Meteo's uv_index is already near-clear-sky, so
+        // dividing an overcast reading by 0.17 would otherwise inflate it wildly
+        // (e.g. 3.6 → 21). Cap at uv_index_clear_sky_max so overrides stay sane.
+        let ceiling = clearSkyMaxUV > 0 ? clearSkyMaxUV : apiUV
+        let clearSkyUV = min(apiUV / currentTransmission, ceiling)
         currentUV = clearSkyUV * cloudTransmission(percent)
         currentCloudCover = percent
         cloudCoverOverride = percent
@@ -255,6 +263,13 @@ class UVService: ObservableObject {
                     // Get today's data (first item in arrays)
                     if let todayMaxUV = response.daily.uvIndexMax.first {
                         self.maxUV = todayMaxUV
+                    }
+
+                    // Clear-sky ceiling for cloud-override back-calculation
+                    if let clearSkyMax = response.daily.uvIndexClearSkyMax?.first {
+                        self.clearSkyMaxUV = clearSkyMax
+                    } else if let todayMaxUV = response.daily.uvIndexMax.first {
+                        self.clearSkyMaxUV = todayMaxUV
                     }
                     
                     // Get tomorrow's max UV
@@ -682,6 +697,8 @@ class UVService: ObservableObject {
                 cloudCoverOverride = nil
                 
                 maxUV = todayData.maxUV
+                // No cached clear-sky max — use the cloud-affected max as the ceiling
+                clearSkyMaxUV = todayData.maxUV
                 todaySunrise = todayData.sunrise
                 todaySunset = todayData.sunset
                 
