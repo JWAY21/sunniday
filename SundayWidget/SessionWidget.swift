@@ -219,40 +219,41 @@ struct SessionWidgetView: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            // Left: big UV hero with clouds beneath — now has the whole column
-            VStack(alignment: .center, spacing: 6) {
-                Text("UV INDEX")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.7))
-                    .tracking(0.6)
-                Text(String(format: "%.1f", entry.uvIndex))
-                    .font(.system(size: 85, weight: .bold))
-                    .foregroundColor(.white)
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
-                HStack(spacing: 6) {
-                    Image(systemName: "cloud.fill")
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.75))
-                    Text("\(Int(entry.cloudCover))% clouds")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.9))
-                        .minimumScaleFactor(0.7)
+        VStack(spacing: 8) {
+            // Top: UV hero (left) · clothing + begin/end (right)
+            HStack(alignment: .center, spacing: 14) {
+                VStack(spacing: 0) {
+                    Text("UV INDEX")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.7))
+                        .tracking(0.6)
+                    Text(String(format: "%.1f", entry.uvIndex))
+                        .font(.system(size: 80, weight: .bold))
+                        .foregroundColor(.white)
+                        .minimumScaleFactor(0.5)
                         .lineLimit(1)
                 }
-            }
-            .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
 
-            // Right: clothing + begin/end on top, TODAY spanning underneath
-            VStack(spacing: 10) {
                 HStack(alignment: .center, spacing: 12) {
                     clothingOrCounter
                     beginOrEnd
                 }
-                todayFooter
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
+
+            // Bottom: clouds (left) · today (right) — aligned on one row, both
+            // styled as headings to match UV INDEX / CLOTHING above.
+            HStack(alignment: .top, spacing: 14) {
+                headingStat("CLOUDS",
+                            value: "\(Int(entry.cloudCover))%",
+                            icon: "cloud.fill")
+                    .frame(maxWidth: .infinity)
+                headingStat("TODAY",
+                            value: formattedTodayTotal,
+                            showTick: todayReachedGoal)
+                    .frame(maxWidth: .infinity)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -260,6 +261,36 @@ struct SessionWidgetView: View {
             LinearGradient(colors: sessionGradientColors(),
                            startPoint: .topLeading,
                            endPoint: .bottomTrailing)
+        }
+    }
+
+    // A stacked stat with an uppercase heading over its value (CLOUDS · TODAY).
+    private func headingStat(_ label: String,
+                             value: String,
+                             icon: String? = nil,
+                             showTick: Bool = false) -> some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.white.opacity(0.65))
+                .tracking(0.6)
+            HStack(spacing: 5) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.85))
+                }
+                Text(value)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                if showTick {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(hex: "3ad16a"))
+                }
+            }
         }
     }
 
@@ -341,26 +372,6 @@ struct SessionWidgetView: View {
                     .foregroundColor(.white.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
-        }
-    }
-
-    // TODAY total, spanning the full width under clothing + begin
-    private var todayFooter: some View {
-        HStack(spacing: 6) {
-            Text("TODAY")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white.opacity(0.65))
-                .tracking(0.4)
-            Text(formattedTodayTotal)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-            if todayReachedGoal {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 13))
-                    .foregroundColor(Color(hex: "3ad16a"))
-            }
         }
     }
 
