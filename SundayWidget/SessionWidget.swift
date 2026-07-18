@@ -10,6 +10,18 @@ private func sharedDefaults() -> UserDefaults? {
     UserDefaults(suiteName: appGroupSuite)
 }
 
+/// Reads the shared clothing level.
+///
+/// Deliberately uses `object(forKey:)` rather than `integer(forKey:)`: a
+/// missing key makes `integer` return 0, which is a *valid* level (`.minimal`),
+/// so an unreadable key would silently masquerade as "minimal" instead of
+/// falling back to a sane default.
+private func sharedClothing(_ defaults: UserDefaults?) -> WidgetClothing {
+    guard let raw = defaults?.object(forKey: "clothingLevel") as? Int,
+          let level = WidgetClothing(rawValue: raw) else { return .light }
+    return level
+}
+
 // Mirror of the app's ClothingLevel — the widget only needs names for display;
 // exposure math stays in the app, which re-reads `clothingLevel` on foreground.
 enum WidgetClothing: Int, CaseIterable {
@@ -113,7 +125,7 @@ struct CycleClothingIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         guard let shared = sharedDefaults() else { return .result() }
-        let current = WidgetClothing(rawValue: shared.integer(forKey: "clothingLevel")) ?? .light
+        let current = sharedClothing(shared)
         shared.set(current.next.rawValue, forKey: "clothingLevel")
         shared.set(true, forKey: "widgetClothingChanged")
         WidgetCenter.shared.reloadAllTimelines()
@@ -147,7 +159,7 @@ struct SessionProvider: TimelineProvider {
             sessionStart: shared?.object(forKey: "sessionStartDate") as? Date,
             ratePerHour: shared?.double(forKey: "vitaminDRate") ?? 0,
             usesMCG: shared?.bool(forKey: "usesMCG") ?? false,
-            clothing: WidgetClothing(rawValue: shared?.integer(forKey: "clothingLevel") ?? 1) ?? .light,
+            clothing: sharedClothing(shared),
             todayTotalIU: shared?.double(forKey: "todaysTotal") ?? 0,
             todayBaseIU: shared?.double(forKey: "todaysBase") ?? 0
         )

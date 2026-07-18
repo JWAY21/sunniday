@@ -704,7 +704,12 @@ class VitaminDCalculator: ObservableObject {
             sharedDefaults?.set(uvService.currentUV, forKey: "currentUV")
         }
         sharedDefaults?.set(currentVitaminDRate, forKey: "vitaminDRate")
-        sharedDefaults?.set(clothingLevel.rawValue, forKey: "clothingLevel")
+        // Don't clobber a clothing change made on the widget that the app
+        // hasn't reconciled yet — same race as isTracking above, where a
+        // periodic refresh would overwrite the widget's fresh value.
+        if sharedDefaults?.bool(forKey: "widgetClothingChanged") != true {
+            sharedDefaults?.set(clothingLevel.rawValue, forKey: "clothingLevel")
+        }
         sharedDefaults?.set(UserDefaults.standard.bool(forKey: "usesMCG"), forKey: "usesMCG")
 
         // Ensure health base is reasonably fresh

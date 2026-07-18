@@ -21,7 +21,11 @@ enum WidgetSessionBridge {
 
         // 1. Clothing cycled on the widget
         if shared.bool(forKey: "widgetClothingChanged") {
-            if let level = ClothingLevel(rawValue: shared.integer(forKey: "clothingLevel")) {
+            // Use object(forKey:) — integer(forKey:) yields 0 for a missing key,
+            // and 0 is a real level (.minimal), so an unreadable key would
+            // silently reset the user's clothing to Minimal.
+            if let raw = shared.object(forKey: "clothingLevel") as? Int,
+               let level = ClothingLevel(rawValue: raw) {
                 calculator.clothingLevel = level
             }
             shared.set(false, forKey: "widgetClothingChanged")
