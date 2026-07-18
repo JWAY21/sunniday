@@ -244,7 +244,7 @@ struct SessionWidgetView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                HStack(alignment: .center, spacing: 12) {
+                HStack(alignment: .bottom, spacing: 12) {
                     clothingOrCounter
                     beginOrEnd
                 }
@@ -326,7 +326,7 @@ struct SessionWidgetView: View {
             Button(intent: CycleClothingIntent()) {
                 VStack(spacing: 6) {
                     clothingGlyph
-                        .frame(height: 65)
+                        .frame(height: 55)
                     Text(entry.clothing.shortName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
