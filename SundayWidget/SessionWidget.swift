@@ -29,14 +29,23 @@ enum WidgetClothing: Int, CaseIterable {
         }
     }
 
-    /// SF Symbol representing the coverage level.
-    var icon: String {
+    /// Custom hand-drawn clothing figure in WidgetAssets, or nil for levels
+    /// with no artwork (bare skin) — those fall back to `sfSymbol`.
+    var assetName: String? {
         switch self {
-        case .none:     return "figure.stand"       // bare figure
-        case .minimal:  return "figure.pool.swim"   // swimwear
-        case .light:    return "tshirt.fill"        // shorts & tee
-        case .moderate: return "figure.walk"        // pants & shirt
-        case .heavy:    return "coat"               // long sleeves & long pants
+        case .none:     return nil                  // bare figure → SF Symbol
+        case .minimal:  return "clothingMinimal"    // swimwear
+        case .light:    return "clothingLight"      // tee + shorts
+        case .moderate: return "clothingModerate"   // tee + long pants
+        case .heavy:    return "clothingHeavy"      // long-sleeve tee + long pants
+        }
+    }
+
+    /// SF Symbol fallback (used only when `assetName` is nil).
+    var sfSymbol: String {
+        switch self {
+        case .none: return "figure.stand"
+        default:    return "tshirt.fill"
         }
     }
 
@@ -315,13 +324,9 @@ struct SessionWidgetView: View {
             .frame(maxWidth: .infinity)
         } else {
             Button(intent: CycleClothingIntent()) {
-                VStack(spacing: 4) {
-                    Text("CLOTHING")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                    Image(systemName: entry.clothing.icon)
-                        .font(.system(size: 22))
-                        .foregroundColor(.white)
+                VStack(spacing: 6) {
+                    clothingGlyph
+                        .frame(height: 52)
                     Text(entry.clothing.shortName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
@@ -330,6 +335,22 @@ struct SessionWidgetView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    // The clothing figure — hand-drawn art tinted white, or an SF Symbol
+    // fallback for levels without artwork (e.g. bare skin).
+    @ViewBuilder private var clothingGlyph: some View {
+        if let asset = entry.clothing.assetName {
+            Image(asset)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(.white)
+        } else {
+            Image(systemName: entry.clothing.sfSymbol)
+                .font(.system(size: 44))
+                .foregroundColor(.white)
         }
     }
 
