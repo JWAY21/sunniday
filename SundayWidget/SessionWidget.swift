@@ -54,8 +54,9 @@ enum WidgetClothing: Int, CaseIterable {
     /// shorter swim/bare glyphs.
     var glyphHeight: CGFloat {
         switch self {
-        case .light, .moderate, .heavy: return 65
-        default:                        return 52
+        case .moderate, .heavy: return 65   // full-body figures, 125%
+        case .light:            return 47   // tee + shorts, 90%
+        default:                return 52   // swim / bare, base size
         }
     }
 
