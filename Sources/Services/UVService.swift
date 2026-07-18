@@ -318,10 +318,10 @@ class UVService: ObservableObject {
                     if let hourlyUV = response.hourly?.uvIndex,
                        hour < hourlyUV.count {
                         let currentHourUV = hourlyUV[hour]
-                        
+
                         // Calculate interpolation factor (0.0 to 1.0 based on minutes)
                         let interpolationFactor = Double(minute) / 60.0
-                        
+
                         // Get next hour's UV for interpolation
                         var interpolatedUV = currentHourUV
                         if hour + 1 < hourlyUV.count {
@@ -329,30 +329,49 @@ class UVService: ObservableObject {
                             // Linear interpolation between current and next hour
                             interpolatedUV = currentHourUV + (nextHourUV - currentHourUV) * interpolationFactor
                         }
-                        
-                        self.currentUV = interpolatedUV
+
+                        // Always update the raw API baseline — needed to re-apply any active override
                         self.apiUV = interpolatedUV
+                        // Only write currentUV from the API if the user hasn't manually overridden it
+                        if self.cloudCoverOverride == nil {
+                            self.currentUV = interpolatedUV
+                        }
                     } else {
                         // Fallback: estimate current UV based on max and time of day
                         let estimated = self.estimateCurrentUV(maxUV: self.maxUV, hour: hour)
-                        self.currentUV = estimated
                         self.apiUV = estimated
+                        if self.cloudCoverOverride == nil {
+                            self.currentUV = estimated
+                        }
                     }
 
                     // Get current hour's cloud cover
                     if let cloudCover = response.hourly?.cloudCover,
                        hour < cloudCover.count {
                         self.apiCloudCover = cloudCover[hour]
-                        self.currentCloudCover = cloudCover[hour]
-                        // Share with widget (incl. forecast baseline for the widget's cloud override)
-                        sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
+                        // Only update currentCloudCover from the API if no manual override is active
+                        if self.cloudCoverOverride == nil {
+                            self.currentCloudCover = cloudCover[hour]
+                        }
+                        // Share raw API baselines with the widget so its own override logic works correctly
                         sharedDefaults?.set(self.apiCloudCover, forKey: "forecastCloudCover")
                         sharedDefaults?.set(self.apiUV, forKey: "forecastUV")
-                        sharedDefaults?.removeObject(forKey: "cloudOverride")
+                        if let override = self.cloudCoverOverride {
+                            // Persist the active override so the widget reflects it too
+                            sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
+                            sharedDefaults?.set(override, forKey: "cloudOverride")
+                        } else {
+                            sharedDefaults?.set(self.currentCloudCover, forKey: "currentCloudCover")
+                            sharedDefaults?.removeObject(forKey: "cloudOverride")
+                        }
                     }
 
-                    // Clear any user override now that we have fresh API data
-                    self.cloudCoverOverride = nil
+                    // If a manual override is active, re-apply it against the refreshed API baseline
+                    // (clearSkyMaxUV was just updated above, so this stays self-consistent).
+                    // Do NOT clear cloudCoverOverride on a background refresh — only the user can do that.
+                    if let override = self.cloudCoverOverride {
+                        self.applyCloudOverride(override)
+                    }
                     
                     // Calculate safe exposure times
                     self.calculateSafeExposureTimes()
@@ -682,19 +701,33 @@ class UVService: ObservableObject {
                 // Set current UV based on cached hourly data
                 let hour = calendar.component(.hour, from: Date())
                 if hour < todayData.hourlyUV.count {
-                    currentUV = todayData.hourlyUV[hour]
-                    apiUV = currentUV
+                    let cachedHourlyUV = todayData.hourlyUV[hour]
+                    // Always update raw API baseline for override re-calculation
+                    apiUV = cachedHourlyUV
+                    if cloudCoverOverride == nil {
+                        currentUV = cachedHourlyUV
+                    }
                     if hour < todayData.hourlyCloudCover.count {
-                        currentCloudCover = todayData.hourlyCloudCover[hour]
-                        apiCloudCover = currentCloudCover
-                        // Share with widget (incl. forecast baseline for the widget's cloud override)
-                        sharedDefaults?.set(currentCloudCover, forKey: "currentCloudCover")
+                        apiCloudCover = todayData.hourlyCloudCover[hour]
+                        if cloudCoverOverride == nil {
+                            currentCloudCover = apiCloudCover
+                        }
+                        // Share raw API baselines with the widget
                         sharedDefaults?.set(apiCloudCover, forKey: "forecastCloudCover")
                         sharedDefaults?.set(apiUV, forKey: "forecastUV")
-                        sharedDefaults?.removeObject(forKey: "cloudOverride")
+                        if let override = cloudCoverOverride {
+                            sharedDefaults?.set(currentCloudCover, forKey: "currentCloudCover")
+                            sharedDefaults?.set(override, forKey: "cloudOverride")
+                        } else {
+                            sharedDefaults?.set(currentCloudCover, forKey: "currentCloudCover")
+                            sharedDefaults?.removeObject(forKey: "cloudOverride")
+                        }
                     }
                 }
-                cloudCoverOverride = nil
+                // Re-apply any active manual override against the refreshed cached baseline
+                if let override = cloudCoverOverride {
+                    applyCloudOverride(override)
+                }
                 
                 maxUV = todayData.maxUV
                 // No cached clear-sky max — use the cloud-affected max as the ceiling
