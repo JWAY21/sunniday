@@ -696,7 +696,13 @@ class VitaminDCalculator: ObservableObject {
         // lifecycle methods (writeSessionState), never here — otherwise a
         // periodic refresh could clobber a session the widget just started
         // before the app has reconciled it.
-        sharedDefaults?.set(uvService.currentUV, forKey: "currentUV")
+        // Don't clobber the widget's last-known UV with a transient 0 during a
+        // cold launch (currentUV is 0.0 until the first fetch returns). A real
+        // 0 — night, sun down — only counts once we've actually loaded data
+        // (lastSuccessfulUpdate != nil), so night still correctly shows "No UV".
+        if uvService.currentUV > 0 || uvService.lastSuccessfulUpdate != nil {
+            sharedDefaults?.set(uvService.currentUV, forKey: "currentUV")
+        }
         sharedDefaults?.set(currentVitaminDRate, forKey: "vitaminDRate")
         sharedDefaults?.set(clothingLevel.rawValue, forKey: "clothingLevel")
         sharedDefaults?.set(UserDefaults.standard.bool(forKey: "usesMCG"), forKey: "usesMCG")
