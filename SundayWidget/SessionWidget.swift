@@ -49,6 +49,16 @@ enum WidgetClothing: Int, CaseIterable {
         }
     }
 
+    /// Rendered height for the widget glyph. The full-body combined figures
+    /// (light/moderate/heavy) get 125% so they read at the same weight as the
+    /// shorter swim/bare glyphs.
+    var glyphHeight: CGFloat {
+        switch self {
+        case .light, .moderate, .heavy: return 65
+        default:                        return 52
+        }
+    }
+
     var next: WidgetClothing {
         let all = WidgetClothing.allCases
         let index = all.firstIndex(of: self) ?? 2
@@ -326,7 +336,7 @@ struct SessionWidgetView: View {
             Button(intent: CycleClothingIntent()) {
                 VStack(spacing: 6) {
                     clothingGlyph
-                        .frame(height: 52)
+                        .frame(height: entry.clothing.glyphHeight)
                     Text(entry.clothing.shortName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
