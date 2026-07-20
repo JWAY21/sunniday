@@ -673,12 +673,26 @@ class VitaminDCalculator: ObservableObject {
         guard let elevation = solarElevationDegrees(at: now) else {
             return legacyTimeOfDayQualityFactor(at: now)
         }
-        guard elevation > 0 else { return 0.0 }   // sun below horizon
+        return vitaminDQualityFactor(forElevationDegrees: elevation)
+    }
 
+    /// The elevation→yield curve itself. Exposed so the info screen can chart
+    /// the exact function the model uses rather than re-deriving it.
+    func vitaminDQualityFactor(forElevationDegrees elevation: Double) -> Double {
+        guard elevation > 0 else { return 0.0 }   // sun below horizon
         let reference = sin(50.0 * .pi / 180.0)
         let ratio = sin(elevation * .pi / 180.0) / reference
         return min(1.0, pow(max(0.0, ratio), 1.5))
     }
+
+    /// Synthesised IU for a given vitamin-D-effective dose, before yield
+    /// modifiers. Exposed for the info screen's saturation chart.
+    func synthesisCurveIU(atDose m: Double) -> Double {
+        synthesisedIU(atMEDFraction: m)
+    }
+
+    /// The model's calibration constants, for display.
+    var modelConstants: (dmax: Double, k: Double) { (vitaminDMaxIU, vitaminDSaturationK) }
 
     /// Solar elevation in degrees, or nil if we lack the location/sun times.
     ///
@@ -688,7 +702,7 @@ class VitaminDCalculator: ObservableObject {
     /// and the equation of time — all of which a clock-derived hour angle would
     /// get wrong (the previous hardcoded 13:00 solar noon was ~69 minutes late
     /// in Byron Bay outside DST).
-    private func solarElevationDegrees(at date: Date) -> Double? {
+    func solarElevationDegrees(at date: Date) -> Double? {
         guard let uvService = uvService,
               let sunrise = uvService.todaySunrise,
               let sunset = uvService.todaySunset,

@@ -289,12 +289,19 @@ struct ContentView: View {
                     .tracking(2)
             }
             HStack {
+                Button(action: { showInfoSheet = true }) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.white.opacity(0.85))
+                }
+                .accessibilityLabel("How it works")
                 Spacer()
                 Button(action: { showHistorySheet = true }) {
                     Image(systemName: "chart.bar.fill")
                         .font(.system(size: 22))
                         .foregroundColor(.white.opacity(0.85))
                 }
+                .accessibilityLabel("History")
             }
         }
     }
@@ -661,7 +668,7 @@ struct ContentView: View {
                 .environmentObject(healthManager)
         }
         .sheet(isPresented: $showInfoSheet) {
-            InfoSheet()
+            InfoView()
         }
         .sheet(isPresented: $showManualExposureSheet) {
             ManualExposureSheet()
@@ -1223,191 +1230,3 @@ extension Color {
     }
 }
 
-struct InfoSheet: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var vitaminDCalculator: VitaminDCalculator
-    @EnvironmentObject var uvService: UVService
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // About the calculation
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("About")
-                            .font(.headline)
-                        
-                        Text("SUNniDAY uses a scientifically-based multi-factor model to estimate vitamin D synthesis from UV exposure.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text("The calculation considers UV intensity, time of day, clothing coverage, skin type, age, and recent exposure history.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Base rate: 21,000 IU/hr (minimal clothing, ~80% exposure)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Link("View detailed methodology", destination: URL(string: "https://github.com/jackjackbits/sunday/blob/main/METHODOLOGY.md")!)
-                            .font(.caption)
-                            .foregroundColor(.blue)
-
-                        Divider()
-
-                        Text("Open Source")
-                            .font(.headline)
-
-                        Text("SUNniDAY is based on Sun Day by Jack Dorsey, released into the public domain (Unlicense).")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Link("github.com/jackjackbits/sunday", destination: URL(string: "https://github.com/jackjackbits/sunday")!)
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                    
-                    // Current Calculation Factors
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Current Factors")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        VStack(alignment: .leading, spacing: 10) {
-                            FactorRow(
-                                label: "UV Factor",
-                                value: String(format: "%.2fx", (uvService.currentUV * 3.0) / (4.0 + uvService.currentUV)),
-                                detail: "Non-linear response curve"
-                            )
-                            
-                            FactorRow(
-                                label: "UV Quality",
-                                value: String(format: "%.0f%%", vitaminDCalculator.currentUVQualityFactor * 100),
-                                detail: "Time of day effectiveness"
-                            )
-                            
-                            FactorRow(
-                                label: "Clothing",
-                                value: String(format: "%.0f%%", vitaminDCalculator.clothingLevel.exposureFactor * 100),
-                                detail: vitaminDCalculator.clothingLevel.description
-                            )
-                            
-                            FactorRow(
-                                label: "Sunscreen",
-                                value: String(format: "%.0f%%", vitaminDCalculator.sunscreenLevel.uvTransmissionFactor * 100),
-                                detail: vitaminDCalculator.sunscreenLevel.description
-                            )
-                            
-                            FactorRow(
-                                label: "Skin Type",
-                                value: String(format: "%.0f%%", vitaminDCalculator.skinType.vitaminDFactor * 100),
-                                detail: vitaminDCalculator.skinType.description
-                            )
-                            
-                            if vitaminDCalculator.userAge != nil {
-                                FactorRow(
-                                    label: "Age Factor",
-                                    value: String(format: "%.0f%%", calculateAgeFactor() * 100),
-                                    detail: "Age \(vitaminDCalculator.userAge!)"
-                                )
-                            }
-                            
-                            FactorRow(
-                                label: "Adaptation",
-                                value: String(format: "%.1fx", vitaminDCalculator.currentAdaptationFactor),
-                                detail: "Based on 7-day history"
-                            )
-                            
-                            if uvService.currentAltitude > 100 {
-                                FactorRow(
-                                    label: "Altitude",
-                                    value: String(format: "+%.0f%%", (uvService.uvMultiplier - 1) * 100),
-                                    detail: "\(Int(uvService.currentAltitude))m elevation"
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.vertical, 10)
-                        .background(Color.secondary.opacity(0.1))
-                        .cornerRadius(10)
-                    }
-                    
-                    // Data sources
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Data Sources")
-                            .font(.headline)
-                        
-                        HStack {
-                            Image(systemName: "location.circle.fill")
-                                .foregroundColor(.blue)
-                            Text("Location from device GPS")
-                                .font(.caption)
-                        }
-                        
-                        HStack {
-                            Image(systemName: "sun.max.fill")
-                                .foregroundColor(.orange)
-                            Text("UV data from Open-Meteo")
-                                .font(.caption)
-                        }
-                        
-                        HStack {
-                            Image(systemName: "heart.fill")
-                                .foregroundColor(.red)
-                            Text("Health data from Apple Health")
-                                .font(.caption)
-                        }
-                    }
-                    
-                    Spacer(minLength: 20)
-                }
-                .padding()
-            }
-            .navigationTitle("How It Works")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: Button("Done") { dismiss() })
-            .preferredColorScheme(.dark)
-        }
-        .presentationBackground(Color(UIColor.systemBackground).opacity(0.99))
-    }
-    
-    private func calculateAgeFactor() -> Double {
-        guard let age = vitaminDCalculator.userAge else {
-            return 1.0
-        }
-        
-        if age <= 20 {
-            return 1.0
-        } else if age >= 70 {
-            return 0.25
-        } else {
-            // Match the calculator's age slope (~1% per year after 20)
-            return max(0.25, 1.0 - Double(age - 20) * 0.01)
-        }
-    }
-}
-
-struct FactorRow: View {
-    let label: String
-    let value: String
-    let detail: String
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Text(detail)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            Text(value)
-                .font(.system(.body, design: .monospaced))
-                .fontWeight(.medium)
-        }
-    }
-}
