@@ -55,7 +55,7 @@ struct LifecycleView: View {
             Text("A molecule's journey")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-            Text("Vitamin D isn't a vitamin at all — it's a hormone, and one of the few your body can only finish building with help from the sky. Here is the whole route, from a fat molecule in your bloodstream to a switch sitting on your DNA.")
+            Text("Vitamin D isn't a vitamin at all — it's a hormone, and one of the few your body can only finish building with help from the sky. Here is the whole route, from a molecule your own cells assemble to a switch sitting on your DNA.")
                 .font(.system(size: 15))
                 .foregroundColor(.white.opacity(0.92))
                 .lineSpacing(3)
@@ -233,18 +233,25 @@ private struct LifecycleStage: Identifiable {
 
     static let all: [LifecycleStage] = [
         LifecycleStage(
-            icon: "fork.knife",
-            title: "It begins with cholesterol",
-            molecule: "cholesterol",
-            body: "Food plays a part, but most of the cholesterol in your body is one you built yourself — the liver and nearly every other tissue manufacture it continuously. It's the raw material for cell membranes, bile, and every steroid hormone you make.",
+            icon: "arrow.branch",
+            title: "Not from cholesterol — from one step before it",
+            molecule: "acetyl-CoA → … → 7-DHC → cholesterol",
+            body: "You'll often read that sunlight turns the cholesterol in your skin into vitamin D. That's backwards.\n\nYour cells build sterols from scratch, in a long chain that ends: 7-dehydrocholesterol, then cholesterol. An enzyme called DHCR7 catalyses that final step. Vitamin D branches off the chain one rung earlier — it's made from 7-DHC, cholesterol's immediate precursor.\n\nThe distinction matters, because the reaction only runs one way. Cholesterol already in your blood cannot be turned back into 7-DHC, so dietary cholesterol isn't feedstock for vitamin D.",
             aside: "Vitamin D is a steroid. It shares an ancestor with testosterone, oestrogen and cortisol — the difference is that this one needs a photon to finish."
         ),
         LifecycleStage(
             icon: "square.stack.3d.up.fill",
-            title: "Your skin keeps a precursor in reserve",
+            title: "Your skin holds the branch point open",
             molecule: "7-dehydrocholesterol (7-DHC)",
-            body: "Cholesterol is built in steps, and the very last step converts 7-dehydrocholesterol into cholesterol using an enzyme called DHCR7. Your skin deliberately runs that final step slowly, leaving a standing pool of 7-DHC in the deeper layers of the epidermis.\n\nIt's made there, in the skin itself — not shipped in from the liver. Your body maintains a light-sensitive stockpile in the one organ that meets the sun.",
-            aside: "That pool thins with age, which is a large part of why an older person makes far less vitamin D from the same amount of sunshine."
+            body: "The epidermis has no blood supply of its own, so it manufactures its own sterols — meaning the 7-DHC pool sitting in your skin was built there, in the living layers beneath the surface, rather than shipped in from the liver.\n\nHow much stays as 7-DHC comes down to DHCR7. Every molecule it converts becomes cholesterol; every molecule it leaves alone stays available to the sun.",
+            aside: "It self-balances rather elegantly: when cholesterol is plentiful it accelerates DHCR7's own destruction, so 7-DHC builds up and more is left for vitamin D. In keratinocytes, added cholesterol cut DHCR7 activity by 55% and raised vitamin D synthesis by 50%."
+        ),
+        LifecycleStage(
+            icon: "hourglass",
+            title: "And the reserve thins with age",
+            molecule: nil,
+            body: "The amount of 7-DHC held in the epidermis falls steadily over a lifetime. It's a large part of why an older person can sit in exactly the same sunshine as a younger one and make substantially less vitamin D from it.",
+            aside: "The app applies an age adjustment for this — about 1% per year past 20, levelling off around a quarter of youthful capacity."
         ),
         LifecycleStage(
             icon: "sun.max.fill",
@@ -355,6 +362,14 @@ private struct LifecycleReference: Identifiable {
             title: "Holick MF et al. (1981), Science 211:590–3",
             note: "Photoequilibrium: previtamin D3 plateaus at ~10–15% conversion, diverting to lumisterol3 and tachysterol3. Stage 5.",
             url: "https://www.science.org/doi/10.1126/science.6256855"),
+        LifecycleReference(
+            title: "Prabhu AV et al., J Biol Chem — cholesterol-mediated degradation of DHCR7",
+            note: "DHCR7 reduces the C7–8 double bond of 7-DHC to form cholesterol; cholesterol accelerates DHCR7's proteasomal degradation, so 7-DHC accumulates and vitamin D synthesis rises. Stages 1–2.",
+            url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4861412/"),
+        LifecycleReference(
+            title: "Zerenturk EJ et al. — DHCR7: a vital enzyme switch between cholesterol and vitamin D production",
+            note: "Review of DHCR7 as the branch point governing the split between cholesterol and vitamin D. Stage 2.",
+            url: "https://www.sciencedirect.com/science/article/abs/pii/S0163782716300340"),
         LifecycleReference(
             title: "MacLaughlin JA, Anderson RR, Holick MF (1982), Science 216:1001–3",
             note: "Action spectrum for previtamin D3; optimum 295–300 nm. Stage 3.",
