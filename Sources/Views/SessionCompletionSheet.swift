@@ -57,8 +57,7 @@ struct SessionCompletionSheet: View {
         let value = usesMCG ? currentAmount / 40.0 : currentAmount
         let unit  = usesMCG ? "mcg" : "IU"
         if value == 0  { return "0 \(unit)" }
-        if value < 1   { return String(format: "%.1f \(unit)", value) }
-        if value < 1000 { return "\(Int(value)) \(unit)" }
+        if value < 1000 { return "\(Int(value.rounded())) \(unit)" }
         if value < 100_000 {
             let f = NumberFormatter()
             f.numberStyle = .decimal

@@ -924,26 +924,19 @@ struct ContentView: View {
         }
     }
     
+    // These are modelled estimates with wide underlying uncertainty (the
+    // literature spans 10,000–25,000 IU per whole-body MED), so decimals would
+    // imply precision we don't have. Whole numbers only.
     private func formatVitaminD(_ value: Double) -> String {
-        if value < 1 {
-            return String(format: "%.2f IU", value)
-        } else if value < 10 {
-            return String(format: "%.1f IU", value)
-        } else {
-            return "\(Int(value)) IU"
-        }
+        "\(Int(value.rounded())) IU"
     }
-    
+
     private func formatVitaminDNumber(_ value: Double) -> String {
-        if value < 1 {
-            return String(format: "%.2f", value)
-        } else if value < 10 {
-            return String(format: "%.1f", value)
-        } else if value < 1000 {
-            return "\(Int(value))"
+        if value < 1000 {
+            return "\(Int(value.rounded()))"
         } else if value < 100000 {
             // Add comma formatting for readability (shared formatter)
-            return Formatters.decimal.string(from: NSNumber(value: value)) ?? "\(Int(value))"
+            return Formatters.decimal.string(from: NSNumber(value: value.rounded())) ?? "\(Int(value.rounded()))"
         } else {
             // Handle very large numbers with K notation
             return String(format: "%.0fK", value / 1000)

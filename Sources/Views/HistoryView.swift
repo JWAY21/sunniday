@@ -289,8 +289,7 @@ struct HistoryView: View {
     // MARK: Formatting
     private func formatValue(_ value: Double) -> String {
         if value == 0  { return "0" }
-        if value < 1   { return String(format: "%.1f", value) }
-        if value < 1000 { return "\(Int(value))" }
+        if value < 1000 { return "\(Int(value.rounded()))" }
         let f = NumberFormatter()
         f.numberStyle = .decimal
         f.maximumFractionDigits = 0

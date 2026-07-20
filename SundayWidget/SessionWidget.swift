@@ -226,8 +226,9 @@ struct SessionWidgetView: View {
 
     private func format(iu: Double) -> String {
         if entry.usesMCG {
-            let mcg = iu / 40.0
-            return mcg < 10 ? String(format: "%.1f mcg", mcg) : "\(Int(mcg)) mcg"
+            // Whole numbers only — these are estimates, decimals imply
+            // precision the underlying model doesn't have.
+            return "\(Int((iu / 40.0).rounded())) mcg"
         }
         if iu < 1000 { return "\(Int(iu)) IU" }
         if iu < 100_000 {
