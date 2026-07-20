@@ -29,11 +29,13 @@ struct OpenMeteoResponse: Codable {
     struct HourlyData: Codable {
         let time: [String]
         let uvIndex: [Double]
+        let uvIndexClearSky: [Double]?
         let cloudCover: [Double]?
-        
+
         enum CodingKeys: String, CodingKey {
             case time
             case uvIndex = "uv_index"
+            case uvIndexClearSky = "uv_index_clear_sky"
             case cloudCover = "cloud_cover"
         }
     }
@@ -46,9 +48,14 @@ class UVService: ObservableObject {
     #endif
     @Published var currentUV: Double = 0.0
     @Published var maxUV: Double = 0.0
-    /// Today's clear-sky max UV from the API — the physical ceiling for any
-    /// cloud-override back-calculation (prevents absurd inflated values).
+    /// Today's clear-sky max UV from the API — fallback ceiling for the
+    /// cloud-override back-calculation when hourly clear-sky data is missing.
     private var clearSkyMaxUV: Double = 0.0
+    /// Clear-sky UV for the *current hour* (interpolated). This is the correct
+    /// baseline for a cloud override: it already answers "what would the UV be
+    /// right now with no cloud", so an override is a straight multiply with no
+    /// back-calculation. 0 when unavailable (e.g. offline/cached path).
+    private var apiClearSkyUV: Double = 0.0
     @Published var tomorrowMaxUV: Double = 0.0
     @Published var isLoading = false
     @Published var lastError: String?
@@ -111,18 +118,25 @@ class UVService: ObservableObject {
     }
 
     /// Apply a user-selected cloud cover override (0, 25, 50, 75, or 100).
-    /// Back-calculates clear-sky UV from the API value using the same transmission
-    /// table, then applies the override's factor — self-consistent per hour.
-    /// e.g. at 59% cloud / UV 8.2: clearSky = 8.2 / 0.623 ≈ 13.2; at 0% → 13.2
+    ///
+    /// Preferred path: the API's clear-sky UV *for this hour* is exactly "the UV
+    /// with no cloud", so the override is a straight multiply by the transmission
+    /// factor — no back-calculation, correct at every time of day.
+    ///
+    /// Fallback (offline/cached, no hourly clear-sky available): back-calculate
+    /// from the observed UV, capped at the day's clear-sky max. That ceiling is a
+    /// *daily* peak, so it over-estimates away from solar noon — hence only a
+    /// fallback.
     func applyCloudOverride(_ percent: Double) {
-        let currentTransmission = cloudTransmission(apiCloudCover)
-        guard currentTransmission > 0 else { return }
-        // Back-calculate clear-sky UV, but never let it exceed the day's real
-        // clear-sky ceiling. Open-Meteo's uv_index is already near-clear-sky, so
-        // dividing an overcast reading by 0.17 would otherwise inflate it wildly
-        // (e.g. 3.6 → 21). Cap at uv_index_clear_sky_max so overrides stay sane.
-        let ceiling = clearSkyMaxUV > 0 ? clearSkyMaxUV : apiUV
-        let clearSkyUV = min(apiUV / currentTransmission, ceiling)
+        let clearSkyUV: Double
+        if apiClearSkyUV > 0 {
+            clearSkyUV = apiClearSkyUV
+        } else {
+            let currentTransmission = cloudTransmission(apiCloudCover)
+            guard currentTransmission > 0 else { return }
+            let ceiling = clearSkyMaxUV > 0 ? clearSkyMaxUV : apiUV
+            clearSkyUV = min(apiUV / currentTransmission, ceiling)
+        }
         currentUV = clearSkyUV * cloudTransmission(percent)
         currentCloudCover = percent
         cloudCoverOverride = percent
@@ -229,7 +243,7 @@ class UVService: ObservableObject {
         // Open-Meteo API - completely free, no API key needed!
         // Include elevation for more accurate UV calculations
         // Get 2 days of data (today and tomorrow) to reduce bandwidth
-        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&elevation=\(altitude)&daily=uv_index_max,uv_index_clear_sky_max,sunrise,sunset&hourly=uv_index,cloud_cover&timezone=auto&forecast_days=2"
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&elevation=\(altitude)&daily=uv_index_max,uv_index_clear_sky_max,sunrise,sunset&hourly=uv_index,uv_index_clear_sky,cloud_cover&timezone=auto&forecast_days=2"
         
         guard let url = URL(string: urlString) else {
             lastError = "Invalid URL"
@@ -335,6 +349,19 @@ class UVService: ObservableObject {
                         // Only write currentUV from the API if the user hasn't manually overridden it
                         if self.cloudCoverOverride == nil {
                             self.currentUV = interpolatedUV
+                        }
+
+                        // Clear-sky UV for this hour, interpolated identically —
+                        // the exact baseline for cloud overrides.
+                        if let clearSky = response.hourly?.uvIndexClearSky,
+                           hour < clearSky.count {
+                            var interpolatedClearSky = clearSky[hour]
+                            if hour + 1 < clearSky.count {
+                                interpolatedClearSky += (clearSky[hour + 1] - clearSky[hour]) * interpolationFactor
+                            }
+                            self.apiClearSkyUV = interpolatedClearSky
+                        } else {
+                            self.apiClearSkyUV = 0
                         }
                     } else {
                         // Fallback: estimate current UV based on max and time of day
@@ -704,6 +731,10 @@ class UVService: ObservableObject {
                     let cachedHourlyUV = todayData.hourlyUV[hour]
                     // Always update raw API baseline for override re-calculation
                     apiUV = cachedHourlyUV
+                    // The cache doesn't store hourly clear-sky UV — drop any stale
+                    // value so applyCloudOverride uses the fallback, not last
+                    // fetch's figure for a different hour.
+                    apiClearSkyUV = 0
                     if cloudCoverOverride == nil {
                         currentUV = cachedHourlyUV
                     }

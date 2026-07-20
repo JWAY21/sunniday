@@ -156,6 +156,11 @@ class VitaminDCalculator: ObservableObject {
     private var appBackgroundObserver: NSObjectProtocol?
     private var wasTrackingBeforeBackground = false
     private var lastSessionSaveTime: Date?
+    /// Manually logged amounts added during an active session. Kept separate so
+    /// recomputing synthesis from the dose each tick can't wipe them.
+    private var manualSessionAdjustment: Double = 0.0
+    /// Ensures the approaching-burn notification fires once per session.
+    private var hasWarnedApproachingBurn = false
     private var lastWidgetUpdateTime: Date?
     private let widgetUpdateThrottle: TimeInterval = 60.0
     private var todaysHealthBase: Double = 0.0
@@ -167,9 +172,35 @@ class VitaminDCalculator: ObservableObject {
     private let signposter = OSSignposter(subsystem: "com.jway.sunniday", category: "Calculator")
     #endif
     
-    // UV response curve parameters
-    private let uvHalfMax = 4.0  // UV index for 50% vitamin D synthesis rate (more linear)
-    private let uvMaxFactor = 3.0 // Maximum multiplication factor at high UV
+    // MARK: - Vitamin D synthesis model
+    //
+    // Dose is expressed as a fraction of an MED — the same unit the photobiology
+    // literature uses — and synthesis SATURATES rather than accumulating
+    // linearly:
+    //
+    //     D(m) = Dmax × (1 − e^(−k·m))        m = cumulative MED fraction
+    //
+    // The plateau reflects previtamin D3 reaching photoequilibrium at ~10–15%
+    // conversion of 7-dehydrocholesterol, beyond which it photoisomerises to
+    // biologically inert lumisterol3 and tachysterol3 (Holick, Science 1981).
+    // That is the mechanism preventing vitamin D intoxication from prolonged
+    // sun, so unbounded linear accumulation is not physiological.
+    //
+    // Calibration: Holick's figures are fluorescent-lamp derived, and solar UV
+    // is ~1.32× more previtamin-D-effective per unit erythemal dose. We scale by
+    // a deliberately conservative 1.25.
+    //   Dmax = 20,000 × 1.25 = 25,000 IU (whole-body asymptote)
+    //   k    = 0.92
+    // Which reproduces the literature anchors:
+    //   ¼ MED over ¼ body → ~1,280 IU   (Holick's rule ~1,000 lamp / ~1,250 solar)
+    //   1 MED whole body  → ~15,000 IU  (Holick 10,000–25,000)
+    private let vitaminDMaxIU = 25000.0
+    private let vitaminDSaturationK = 0.92
+
+    /// MED minutes at UV index 1 by Fitzpatrick type. Must match UVService.
+    static let medMinutesAtUV1: [Int: Double] = [
+        1: 150.0, 2: 250.0, 3: 425.0, 4: 600.0, 5: 850.0, 6: 1100.0
+    ]
     
     init() {
         loadUserPreferences()
@@ -257,11 +288,9 @@ class VitaminDCalculator: ObservableObject {
                     guard let self = self else { return }
                     let currentUV = self.lastUV
                     self.updateVitaminD(uvIndex: currentUV)
-                    self.updateMEDExposure(uvIndex: currentUV)
                 }
                 // Update immediately
                 self.updateVitaminD(uvIndex: self.lastUV)
-                self.updateMEDExposure(uvIndex: self.lastUV)
             }
         }
     }
@@ -274,6 +303,8 @@ class VitaminDCalculator: ObservableObject {
             sessionStartTime = Date()
             sessionVitaminD = 0.0
             cumulativeMEDFraction = 0.0
+            manualSessionAdjustment = 0.0
+            hasWarnedApproachingBurn = false
             lastUpdateTime = Date()
         }
         
@@ -293,8 +324,8 @@ class VitaminDCalculator: ObservableObject {
             guard let self = self else { return }
             // Use the current UV from UVService, not lastUV
             let currentUV = self.lastUV
+            // updateVitaminD advances the MED dose and derives synthesis from it.
             self.updateVitaminD(uvIndex: currentUV)
-            self.updateMEDExposure(uvIndex: currentUV)
         }
         
         updateVitaminDRate(uvIndex: uvIndex)
@@ -305,6 +336,8 @@ class VitaminDCalculator: ObservableObject {
         timer = nil
         sessionStartTime = nil
         cumulativeMEDFraction = 0.0
+        manualSessionAdjustment = 0.0
+        hasWarnedApproachingBurn = false
         
         // Cancel any pending burn warnings
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["burnWarning"])
@@ -342,50 +375,21 @@ class VitaminDCalculator: ObservableObject {
     }
     
     private func updateVitaminDRate(uvIndex: Double) {
-        // Always calculate the rate to show potential vitamin D gain
-        // Base rate: 21000 IU/hr for Type 3 skin with minimal clothing (80% exposure)
-        // Conservative estimate within research range of 20,000-40,000 IU/hr
-        // Full body exposure can reach 30,000-40,000 IU/hr in optimal conditions
-        let baseRate = 21000.0
-        
-        // UV factor: Michaelis-Menten-like saturation curve
-        // More accurate representation of vitamin D synthesis kinetics
-        // UV 0 = 0x, UV 4 ≈ 1.5x (50% of max), UV 12 ≈ 2.25x, UV∞ → 3.0x
-        let uvFactor = (uvIndex * uvMaxFactor) / (uvHalfMax + uvIndex)
-        
-        // Exposure based on clothing coverage
-        let exposureFactor = clothingLevel.exposureFactor
-        
-        // Sunscreen blocks UV radiation
-        let sunscreenFactor = sunscreenLevel.uvTransmissionFactor
-        
-        // Skin type affects vitamin D synthesis efficiency
-        let skinFactor = skinType.vitaminDFactor
-        
-        // Age factor: vitamin D synthesis decreases with age
-        // ~25% synthesis at age 70 compared to age 20
-        // Only apply if we have age data from Apple Health
-        let ageFactor: Double
-        if let age = userAge {
-            if age <= 20 {
-                ageFactor = 1.0
-            } else if age >= 70 {
-                ageFactor = 0.25
-            } else {
-                // Linear decrease: lose ~1% per year after age 20
-                ageFactor = max(0.25, 1.0 - Double(age - 20) * 0.01)
-            }
-        } else {
-            // No age data available, don't apply age factor
-            ageFactor = 1.0
-        }
-        
-        // Calculate UV quality factor based on time of day
+        // Calculate UV quality factor based on time of day. This is also the hook
+        // for the erythemal→previtamin-D action-spectrum correction: UV index is
+        // erythemally weighted, and wavelengths above 330 nm drive erythema but
+        // not vitamin D synthesis, so erythemal dose over-credits synthesis at
+        // low solar elevation (Young et al., PNAS 2021).
         currentUVQualityFactor = calculateUVQualityFactor()
-        
-        // Final calculation: base * UV * clothing * sunscreen * skin type * age * quality * adaptation
-        currentVitaminDRate = baseRate * uvFactor * exposureFactor * sunscreenFactor * skinFactor * ageFactor * currentUVQualityFactor * currentAdaptationFactor
-        
+
+        // Instantaneous rate is the slope of the saturating curve at the dose
+        // accumulated so far, converted to IU/hr. As a session progresses the
+        // marginal rate falls — approaching photoequilibrium.
+        let medPerHour = medFractionPerMinute(uvIndex: uvIndex) * 60.0
+        currentVitaminDRate = marginalIUPerMED(atMEDFraction: cumulativeMEDFraction)
+            * medPerHour
+            * synthesisModifiers
+
         // Throttled widget update
         updateWidgetData()
     }
@@ -393,8 +397,20 @@ class VitaminDCalculator: ObservableObject {
     private func updateVitaminD(uvIndex: Double) {
         guard isInSun else { return }
         
-        // Recalculate rate only when UV changed meaningfully or quality factor needs refresh (~60s)
         let now = Date()
+
+        // Calculate actual time elapsed since last update (should be ~1 second)
+        let elapsed = lastUpdateTime.map { now.timeIntervalSince($0) } ?? 1.0
+        lastUpdateTime = now
+
+        // Advance the erythemal dose FIRST — synthesis is a function of it.
+        // Uses real elapsed time so a stuttering timer can't skew the dose.
+        if uvIndex > 0 {
+            cumulativeMEDFraction += medFractionPerMinute(uvIndex: uvIndex) * (elapsed / 60.0)
+            checkBurnWarning()
+        }
+
+        // Recalculate rate only when UV changed meaningfully or quality factor needs refresh (~60s)
         let uvChanged = abs(uvIndex - lastRateUV) > 0.01
         let needsQualityRefresh = lastRateUpdateTime == nil || now.timeIntervalSince(lastRateUpdateTime!) >= 60.0
         if uvChanged || needsQualityRefresh {
@@ -402,14 +418,14 @@ class VitaminDCalculator: ObservableObject {
             lastRateUpdateTime = now
             lastRateUV = uvIndex
         }
-        
-        // Calculate actual time elapsed since last update (should be ~1 second)
-        let elapsed = lastUpdateTime.map { now.timeIntervalSince($0) } ?? 1.0
-        lastUpdateTime = now
-        
-        // Add vitamin D based on actual elapsed time
-        sessionVitaminD += currentVitaminDRate * (elapsed / 3600.0)
-        
+
+        // Recompute from the dose rather than integrating a rate — this is what
+        // makes synthesis saturate toward photoequilibrium instead of climbing
+        // linearly for as long as the session runs.
+        sessionVitaminD = synthesisedIU(atMEDFraction: cumulativeMEDFraction)
+            * synthesisModifiers
+            + manualSessionAdjustment
+
         // Save session state every 10 seconds
         if lastSessionSaveTime == nil || now.timeIntervalSince(lastSessionSaveTime!) >= 10.0 {
             saveActiveSession()
@@ -456,7 +472,10 @@ class VitaminDCalculator: ObservableObject {
 
     func addManualEntry(amount: Double) {
         // Simply add the manual entry amount to today's session vitamin D
-        // This will be saved to Health by the view that calls this
+        // This will be saved to Health by the view that calls this.
+        // Tracked separately so an active session's per-tick recompute (which
+        // derives synthesis from the accumulated dose) doesn't discard it.
+        manualSessionAdjustment += amount
         sessionVitaminD += amount
         
         // Update widget data to reflect the new total
@@ -464,45 +483,21 @@ class VitaminDCalculator: ObservableObject {
     }
     
     func calculateVitaminD(uvIndex: Double, exposureMinutes: Double, skinType: SkinType, clothingLevel: ClothingLevel, sunscreenLevel: SunscreenLevel = .none) -> Double {
-        // Base rate: 21000 IU/hr for Type 3 skin with minimal clothing (80% exposure)
-        let baseRate = 21000.0
-        
-        // UV factor: Michaelis-Menten-like saturation curve
-        let uvFactor = (uvIndex * uvMaxFactor) / (uvHalfMax + uvIndex)
-        
-        // Exposure based on clothing coverage
-        let exposureFactor = clothingLevel.exposureFactor
-        
-        // Sunscreen blocks UV radiation
-        let sunscreenFactor = sunscreenLevel.uvTransmissionFactor
-        
-        // Skin type affects vitamin D synthesis efficiency
-        let skinFactor = skinType.vitaminDFactor
-        
-        // Age factor: vitamin D synthesis decreases with age
-        let ageFactor: Double
-        if let age = userAge {
-            if age <= 20 {
-                ageFactor = 1.0
-            } else if age >= 70 {
-                ageFactor = 0.25
-            } else {
-                // Linear decrease: lose ~1% per year after age 20
-                ageFactor = max(0.25, 1.0 - Double(age - 20) * 0.01)
-            }
-        } else {
-            // No age data available, don't apply age factor
-            ageFactor = 1.0
-        }
-        
-        // Current adaptation factor (use current if available, otherwise 1.0)
-        let adaptationFactor = currentAdaptationFactor
-        
-        // Calculate hourly rate
-        let hourlyRate = baseRate * uvFactor * exposureFactor * sunscreenFactor * skinFactor * ageFactor * adaptationFactor
-        
-        // Convert to amount for given minutes
-        return hourlyRate * (exposureMinutes / 60.0)
+        // Same saturating, MED-anchored model as a live session, so a logged
+        // past session and a tracked one of equal exposure agree.
+        guard uvIndex > 0,
+              let medAtUV1 = Self.medMinutesAtUV1[skinType.rawValue],
+              medAtUV1 > 0 else { return 0 }
+
+        // Dose accrued, as a fraction of this skin type's MED at this UV
+        let medFraction = (uvIndex / medAtUV1) * exposureMinutes
+
+        // No skin-pigment term — MED already encodes phototype (see synthesisModifiers)
+        return synthesisedIU(atMEDFraction: medFraction)
+            * clothingLevel.exposureFactor
+            * sunscreenLevel.uvTransmissionFactor
+            * ageFactor
+            * currentAdaptationFactor
     }
     
     private func checkHealthKitSkinType() {
@@ -571,33 +566,60 @@ class VitaminDCalculator: ObservableObject {
         }
     }
     
-    private func updateMEDExposure(uvIndex: Double) {
-        guard isInSun, uvIndex > 0 else { return }
-        
-        // MED values at UV 1 (must match UVService values)
-        let medTimesAtUV1: [Int: Double] = [
-            1: 150.0,  // Type I
-            2: 250.0,  // Type II
-            3: 425.0,  // Type III
-            4: 600.0,  // Type IV
-            5: 850.0,  // Type V
-            6: 1100.0  // Type VI
-        ]
-        
-        guard let medTimeAtUV1 = medTimesAtUV1[skinType.rawValue] else { return }
-        
-        // Calculate MED per second at current UV
-        let medMinutesAtCurrentUV = medTimeAtUV1 / uvIndex
-        let medFractionPerSecond = 1.0 / (medMinutesAtCurrentUV * 60.0)
-        
-        // Accumulate MED exposure
-        cumulativeMEDFraction += medFractionPerSecond
-        
-        // Check if approaching burn threshold (80% MED)
-        if cumulativeMEDFraction >= 0.8 && cumulativeMEDFraction < 0.81 {
-            // Send notification that user is approaching burn limit
-            scheduleImmediateBurnWarning()
-        }
+    // MARK: - Synthesis model helpers
+
+    /// Whole-body vitamin D (IU) synthesised at a cumulative MED fraction,
+    /// before body-surface and physiological modifiers.
+    private func synthesisedIU(atMEDFraction m: Double) -> Double {
+        vitaminDMaxIU * (1 - exp(-vitaminDSaturationK * max(0, m)))
+    }
+
+    /// Marginal synthesis per additional MED fraction — the slope of the
+    /// saturating curve, used for the live "potential" rate display.
+    private func marginalIUPerMED(atMEDFraction m: Double) -> Double {
+        vitaminDMaxIU * vitaminDSaturationK * exp(-vitaminDSaturationK * max(0, m))
+    }
+
+    /// Vitamin D synthesis decreases with age as cutaneous 7-dehydrocholesterol
+    /// declines (~25% of youthful capacity by 70). Only applied when we have age.
+    private var ageFactor: Double {
+        guard let age = userAge else { return 1.0 }
+        if age <= 20 { return 1.0 }
+        if age >= 70 { return 0.25 }
+        return max(0.25, 1.0 - Double(age - 20) * 0.01)
+    }
+
+    /// Modifiers applied to the saturating curve.
+    ///
+    /// There is deliberately NO skin-pigment term here. MED already encodes
+    /// phototype — type VI takes ~7× longer to reach 1 MED than type I — and
+    /// per MED, synthesis is broadly comparable across pigmentation (Holick,
+    /// Science 1981: "skin pigment is not an essential regulator"). Applying
+    /// `skinType.vitaminDFactor` on top would double-count melanin, compounding
+    /// to a ~44× penalty for type VI.
+    private var synthesisModifiers: Double {
+        clothingLevel.exposureFactor
+            * sunscreenLevel.uvTransmissionFactor
+            * ageFactor
+            * currentUVQualityFactor
+            * currentAdaptationFactor
+    }
+
+    /// MED fraction accrued per minute of exposure at a given UV.
+    private func medFractionPerMinute(uvIndex: Double) -> Double {
+        guard uvIndex > 0,
+              let medAtUV1 = Self.medMinutesAtUV1[skinType.rawValue],
+              medAtUV1 > 0 else { return 0 }
+        return uvIndex / medAtUV1
+    }
+
+    /// Warn once when approaching the burn threshold (80% MED). The dose itself
+    /// is advanced in `updateVitaminD`, which owns the elapsed-time bookkeeping,
+    /// so this only inspects it.
+    private func checkBurnWarning() {
+        guard isInSun, !hasWarnedApproachingBurn, cumulativeMEDFraction >= 0.8 else { return }
+        hasWarnedApproachingBurn = true
+        scheduleImmediateBurnWarning()
     }
     
     private func scheduleImmediateBurnWarning() {
