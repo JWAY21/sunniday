@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var todaysTotal: Double = 0
     @State private var currentGradientColors: [Color] = []
     @State private var showInfoSheet = false
+    @State private var showLifecycleSheet = false
     @State private var showHistorySheet = false
     @State private var showManualExposureSheet = false
     @State private var showSessionCompletionSheet = false
@@ -282,12 +283,16 @@ struct ContentView: View {
     
     private var headerSection: some View {
         ZStack {
-            Button(action: { showInfoSheet = true }) {
+            // Easter egg: the wordmark opens the full vitamin D life cycle.
+            // Undocumented on purpose — the ⓘ button covers the everyday
+            // explanation, so this one is for the curious.
+            Button(action: { showLifecycleSheet = true }) {
                 Text("SUNniDAY")
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                     .tracking(2)
             }
+            .buttonStyle(.plain)
             HStack {
                 Button(action: { showInfoSheet = true }) {
                     Image(systemName: "info.circle.fill")
@@ -666,6 +671,9 @@ struct ContentView: View {
         .sheet(isPresented: $showHistorySheet) {
             HistoryView()
                 .environmentObject(healthManager)
+        }
+        .sheet(isPresented: $showLifecycleSheet) {
+            LifecycleView()
         }
         .sheet(isPresented: $showInfoSheet) {
             InfoView()

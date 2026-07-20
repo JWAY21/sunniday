@@ -149,7 +149,7 @@ private struct BasicsContent: View {
             }
 
             InfoCard(icon: "shield.lefthalf.filled", title: "You can't overdose from sunlight") {
-                InfoText("Here's the elegant part. As UVB keeps hitting your skin, previtamin D3 builds up — but only to a point. At roughly 10–15% conversion it hits a balance, and any extra sunlight starts converting it into two inert molecules (lumisterol and tachysterol) instead. They do nothing, and your skin sheds them.\n\nSo your skin self-limits. Staying out twice as long doesn't give you twice the vitamin D — it plateaus. This is exactly why you can't poison yourself with sunshine, only burn.\n\nSUNniDAY models that plateau. Watch a long session: the numbers climb quickly at first, then flatten.")
+                InfoText("Here's the elegant part. As UVB keeps hitting your skin, previtamin D3 builds up — but only to a point. At roughly 10–15% conversion it hits a balance, and any extra sunlight starts diverting it into two other molecules — lumisterol and tachysterol — instead. They make no vitamin D, and they can convert back as previtamin D3 is used up.\n\nSo your skin self-limits. Staying out twice as long doesn't give you twice the vitamin D — it plateaus. This is exactly why you can't poison yourself with sunshine, only burn.\n\nSUNniDAY models that plateau. Watch a long session: the numbers climb quickly at first, then flatten.")
             }
 
             InfoCard(icon: "timer", title: "Why we count sunburn, not minutes") {
@@ -244,7 +244,7 @@ private struct ScienceContent: View {
     private var saturationCard: some View {
         InfoCard(icon: "chart.line.uptrend.xyaxis", title: "Saturation curve") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("Whole-body synthesis against dose. It flattens because previtamin D3 reaches photoequilibrium — further UV converts it to inert lumisterol3 and tachysterol3 rather than more vitamin D.")
+                InfoText("Whole-body synthesis against dose. It flattens because previtamin D3 reaches photoequilibrium — further UV diverts it to lumisterol3 and tachysterol3 rather than more vitamin D.")
 
                 Chart {
                     ForEach(saturationData, id: \.m) { p in

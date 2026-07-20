@@ -189,7 +189,8 @@ class VitaminDCalculator: ObservableObject {
     //
     // The plateau reflects previtamin D3 reaching photoequilibrium at ~10–15%
     // conversion of 7-dehydrocholesterol, beyond which it photoisomerises to
-    // biologically inert lumisterol3 and tachysterol3 (Holick, Science 1981).
+    // lumisterol3 and tachysterol3 (Holick, Science 1981) — long assumed inert,
+    // now known to yield bioactive metabolites, but they make no vitamin D.
     // That is the mechanism preventing vitamin D intoxication from prolonged
     // sun, so unbounded linear accumulation is not physiological.
     //
