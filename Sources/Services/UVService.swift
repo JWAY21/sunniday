@@ -72,7 +72,11 @@ class UVService: ObservableObject {
     @Published var currentMoonPhase: Double = 0.0
     @Published var currentMoonPhaseName: String = ""
     @Published var isVitaminDWinter = false
+    /// Absolute latitude, used for the vitamin D winter check.
     @Published var currentLatitude: Double = 0.0
+    /// Signed latitude (negative in the southern hemisphere). Required for solar
+    /// elevation — using the absolute value would invert the seasons.
+    @Published var signedLatitude: Double = 0.0
     @Published var isOfflineMode = false
     @Published var lastSuccessfulUpdate: Date?
     @Published var hasNoData = false
@@ -216,6 +220,7 @@ class UVService: ObservableObject {
         
         // Store latitude for vitamin D winter calculation
         currentLatitude = abs(latitude)
+        signedLatitude = latitude
         
         // Always update altitude from GPS, even if network fails
         let validAltitude = altitude >= 0 ? altitude : 0

@@ -128,7 +128,14 @@ class VitaminDCalculator: ObservableObject {
     @Published var sessionVitaminD: Double = 0.0
     @Published var sessionStartTime: Date?
     @Published var skinTypeFromHealth = false
+    /// Erythemal dose accumulated this session — drives burn risk.
     @Published var cumulativeMEDFraction: Double = 0.0
+    /// Vitamin-D-effective dose accumulated this session: the erythemal dose
+    /// weighted per-increment by solar elevation and sunscreen. Integrated
+    /// incrementally because those vary during a session — applying the current
+    /// values to the whole session retroactively would (for example) zero out
+    /// everything synthesised earlier once the sun sets.
+    @Published var cumulativeVitaminDDose: Double = 0.0
     @Published var userAge: Int? = nil {
         didSet {
             if let age = userAge {
@@ -303,6 +310,7 @@ class VitaminDCalculator: ObservableObject {
             sessionStartTime = Date()
             sessionVitaminD = 0.0
             cumulativeMEDFraction = 0.0
+            cumulativeVitaminDDose = 0.0
             manualSessionAdjustment = 0.0
             hasWarnedApproachingBurn = false
             lastUpdateTime = Date()
@@ -336,6 +344,7 @@ class VitaminDCalculator: ObservableObject {
         timer = nil
         sessionStartTime = nil
         cumulativeMEDFraction = 0.0
+        cumulativeVitaminDDose = 0.0
         manualSessionAdjustment = 0.0
         hasWarnedApproachingBurn = false
         
@@ -386,9 +395,10 @@ class VitaminDCalculator: ObservableObject {
         // accumulated so far, converted to IU/hr. As a session progresses the
         // marginal rate falls — approaching photoequilibrium.
         let medPerHour = medFractionPerMinute(uvIndex: uvIndex) * 60.0
-        currentVitaminDRate = marginalIUPerMED(atMEDFraction: cumulativeMEDFraction)
+        currentVitaminDRate = marginalIUPerMED(atMEDFraction: cumulativeVitaminDDose)
             * medPerHour
-            * synthesisModifiers
+            * doseWeighting
+            * yieldModifiers
 
         // Throttled widget update
         updateWidgetData()
@@ -403,10 +413,13 @@ class VitaminDCalculator: ObservableObject {
         let elapsed = lastUpdateTime.map { now.timeIntervalSince($0) } ?? 1.0
         lastUpdateTime = now
 
-        // Advance the erythemal dose FIRST — synthesis is a function of it.
-        // Uses real elapsed time so a stuttering timer can't skew the dose.
+        // Advance the dose FIRST — synthesis is a function of it. Uses real
+        // elapsed time so a stuttering timer can't skew it.
         if uvIndex > 0 {
-            cumulativeMEDFraction += medFractionPerMinute(uvIndex: uvIndex) * (elapsed / 60.0)
+            let deltaMED = medFractionPerMinute(uvIndex: uvIndex) * (elapsed / 60.0)
+            cumulativeMEDFraction += deltaMED
+            // Weight this increment by the conditions during it, then bank it.
+            cumulativeVitaminDDose += deltaMED * doseWeighting
             checkBurnWarning()
         }
 
@@ -422,8 +435,8 @@ class VitaminDCalculator: ObservableObject {
         // Recompute from the dose rather than integrating a rate — this is what
         // makes synthesis saturate toward photoequilibrium instead of climbing
         // linearly for as long as the session runs.
-        sessionVitaminD = synthesisedIU(atMEDFraction: cumulativeMEDFraction)
-            * synthesisModifiers
+        sessionVitaminD = synthesisedIU(atMEDFraction: cumulativeVitaminDDose)
+            * yieldModifiers
             + manualSessionAdjustment
 
         // Save session state every 10 seconds
@@ -489,13 +502,17 @@ class VitaminDCalculator: ObservableObject {
               let medAtUV1 = Self.medMinutesAtUV1[skinType.rawValue],
               medAtUV1 > 0 else { return 0 }
 
-        // Dose accrued, as a fraction of this skin type's MED at this UV
+        // Dose accrued, as a fraction of this skin type's MED at this UV,
+        // weighted for how vitamin-D-effective that UV is (solar elevation) and
+        // for sunscreen — mirroring how a live session banks each increment.
         let medFraction = (uvIndex / medAtUV1) * exposureMinutes
-
-        // No skin-pigment term — MED already encodes phototype (see synthesisModifiers)
-        return synthesisedIU(atMEDFraction: medFraction)
-            * clothingLevel.exposureFactor
+        let effectiveDose = medFraction
+            * currentUVQualityFactor
             * sunscreenLevel.uvTransmissionFactor
+
+        // No skin-pigment term — MED already encodes phototype (see yieldModifiers)
+        return synthesisedIU(atMEDFraction: effectiveDose)
+            * clothingLevel.exposureFactor
             * ageFactor
             * currentAdaptationFactor
     }
@@ -589,7 +606,16 @@ class VitaminDCalculator: ObservableObject {
         return max(0.25, 1.0 - Double(age - 20) * 0.01)
     }
 
-    /// Modifiers applied to the saturating curve.
+    /// Weights an erythemal dose increment into a vitamin-D-effective one.
+    /// Both terms describe how much vitamin-D-active UV actually reaches the
+    /// skin *at this moment*, so they belong in the dose, not the output.
+    private var doseWeighting: Double {
+        currentUVQualityFactor * sunscreenLevel.uvTransmissionFactor
+    }
+
+    /// Scales the synthesised total: how much skin is exposed and how well it
+    /// converts. These change rarely within a session, so applying them to the
+    /// total is fine.
     ///
     /// There is deliberately NO skin-pigment term here. MED already encodes
     /// phototype — type VI takes ~7× longer to reach 1 MED than type I — and
@@ -597,12 +623,8 @@ class VitaminDCalculator: ObservableObject {
     /// Science 1981: "skin pigment is not an essential regulator"). Applying
     /// `skinType.vitaminDFactor` on top would double-count melanin, compounding
     /// to a ~44× penalty for type VI.
-    private var synthesisModifiers: Double {
-        clothingLevel.exposureFactor
-            * sunscreenLevel.uvTransmissionFactor
-            * ageFactor
-            * currentUVQualityFactor
-            * currentAdaptationFactor
+    private var yieldModifiers: Double {
+        clothingLevel.exposureFactor * ageFactor * currentAdaptationFactor
     }
 
     /// MED fraction accrued per minute of exposure at a given UV.
@@ -633,28 +655,70 @@ class VitaminDCalculator: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
     
+    /// Vitamin-D-effective UV per unit erythemal UV, as a function of solar
+    /// elevation.
+    ///
+    /// A low sun means a longer atmospheric path, which preferentially strips
+    /// the short UVB that drives vitamin D synthesis while leaving the longer
+    /// wavelengths that drive erythema. So an MED earned at 8am is worth far
+    /// less vitamin D than one earned at midday — erythemally-weighted dose
+    /// alone over-credits low sun (Young et al., PNAS 2021: "SED is a poor
+    /// predictor of vitamin D synthesis").
+    ///
+    /// Normalised so 50°+ elevation is full synthesis: ~0.8 at 40°, ~0.5 at
+    /// 30°, ~0.3 at 20°, ~0.1 at 10°, and nothing below the horizon. This is a
+    /// deliberately simple approximation of the action-spectrum ratio.
     private func calculateUVQualityFactor() -> Double {
-        let calendar = Calendar.current
         let now = Date()
-        let hour = calendar.component(.hour, from: now)
-        let minute = calendar.component(.minute, from: now)
-        
-        // Convert to decimal hours
-        let timeDecimal = Double(hour) + Double(minute) / 60.0
-        
-        // Solar noon approximation (varies by location, but ~13:00 is reasonable)
-        let solarNoon = 13.0
-        
-        // Hours from solar noon
-        let hoursFromNoon = abs(timeDecimal - solarNoon)
-        
-        // UV-B effectiveness decreases from solar noon
-        // Peak quality 10 AM - 3 PM (strong UV-B window)
-        // More gradual reduction than previously modeled
-        let qualityFactor = exp(-hoursFromNoon * 0.2)
-        
-        // Ensure minimum quality during daylight hours
-        return max(0.1, min(1.0, qualityFactor))
+        guard let elevation = solarElevationDegrees(at: now) else {
+            return legacyTimeOfDayQualityFactor(at: now)
+        }
+        guard elevation > 0 else { return 0.0 }   // sun below horizon
+
+        let reference = sin(50.0 * .pi / 180.0)
+        let ratio = sin(elevation * .pi / 180.0) / reference
+        return min(1.0, pow(max(0.0, ratio), 1.5))
+    }
+
+    /// Solar elevation in degrees, or nil if we lack the location/sun times.
+    ///
+    /// Solar noon is taken as the midpoint of sunrise and sunset. Because those
+    /// arrive from the API already in local time, that single step corrects for
+    /// daylight saving, the location's longitude offset within its timezone,
+    /// and the equation of time — all of which a clock-derived hour angle would
+    /// get wrong (the previous hardcoded 13:00 solar noon was ~69 minutes late
+    /// in Byron Bay outside DST).
+    private func solarElevationDegrees(at date: Date) -> Double? {
+        guard let uvService = uvService,
+              let sunrise = uvService.todaySunrise,
+              let sunset = uvService.todaySunset,
+              sunset > sunrise else { return nil }
+
+        let solarNoon = Date(timeIntervalSince1970:
+            (sunrise.timeIntervalSince1970 + sunset.timeIntervalSince1970) / 2.0)
+        let hoursFromNoon = date.timeIntervalSince(solarNoon) / 3600.0
+
+        // Solar declination — Cooper's equation, accurate to ~±0.5°
+        let dayOfYear = Double(Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 172)
+        let declination = 23.45 * sin(2.0 * .pi * (284.0 + dayOfYear) / 365.0)
+
+        // Signed latitude: using the absolute value would invert the seasons
+        // in the southern hemisphere.
+        let lat = uvService.signedLatitude * .pi / 180.0
+        let dec = declination * .pi / 180.0
+        let hourAngle = 15.0 * hoursFromNoon * .pi / 180.0
+
+        let sinElevation = sin(lat) * sin(dec) + cos(lat) * cos(dec) * cos(hourAngle)
+        return asin(max(-1.0, min(1.0, sinElevation))) * 180.0 / .pi
+    }
+
+    /// Fallback for before sun times load. Assumes solar noon at 12:00 rather
+    /// than the old 13:00, which was biased by daylight saving.
+    private func legacyTimeOfDayQualityFactor(at date: Date) -> Double {
+        let calendar = Calendar.current
+        let t = Double(calendar.component(.hour, from: date))
+            + Double(calendar.component(.minute, from: date)) / 60.0
+        return max(0.1, min(1.0, exp(-abs(t - 12.0) * 0.2)))
     }
     
     private func updateAdaptationFactor() {
@@ -762,6 +826,7 @@ class VitaminDCalculator: ObservableObject {
             UserDefaults.standard.removeObject(forKey: "activeSessionStartTime")
             UserDefaults.standard.removeObject(forKey: "activeSessionVitaminD")
             UserDefaults.standard.removeObject(forKey: "activeSessionMED")
+            UserDefaults.standard.removeObject(forKey: "activeSessionVitDDose")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUV")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUpdate")
             return
@@ -771,6 +836,7 @@ class VitaminDCalculator: ObservableObject {
         UserDefaults.standard.set(sessionStartTime, forKey: "activeSessionStartTime")
         UserDefaults.standard.set(sessionVitaminD, forKey: "activeSessionVitaminD")
         UserDefaults.standard.set(cumulativeMEDFraction, forKey: "activeSessionMED")
+        UserDefaults.standard.set(cumulativeVitaminDDose, forKey: "activeSessionVitDDose")
         UserDefaults.standard.set(lastUV, forKey: "activeSessionLastUV")
         UserDefaults.standard.set(lastUpdateTime, forKey: "activeSessionLastUpdate")
     }
@@ -788,6 +854,7 @@ class VitaminDCalculator: ObservableObject {
             UserDefaults.standard.removeObject(forKey: "activeSessionStartTime")
             UserDefaults.standard.removeObject(forKey: "activeSessionVitaminD")
             UserDefaults.standard.removeObject(forKey: "activeSessionMED")
+            UserDefaults.standard.removeObject(forKey: "activeSessionVitDDose")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUV")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUpdate")
             return
@@ -797,6 +864,7 @@ class VitaminDCalculator: ObservableObject {
         sessionStartTime = savedStartTime
         sessionVitaminD = UserDefaults.standard.double(forKey: "activeSessionVitaminD")
         cumulativeMEDFraction = UserDefaults.standard.double(forKey: "activeSessionMED")
+        cumulativeVitaminDDose = UserDefaults.standard.double(forKey: "activeSessionVitDDose")
         lastUV = UserDefaults.standard.double(forKey: "activeSessionLastUV")
         lastUpdateTime = UserDefaults.standard.object(forKey: "activeSessionLastUpdate") as? Date
         
