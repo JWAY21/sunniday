@@ -196,6 +196,7 @@ private struct ScienceContent: View {
             calibrationCard
             elevationCard
             todayCard
+            historyCard
             parametersCard
             limitationsCard
             referencesCard
@@ -458,6 +459,41 @@ private struct ScienceContent: View {
 
     // MARK: Parameters
 
+    // MARK: History trend line
+
+    private var historyCard: some View {
+        InfoCard(icon: "chart.bar.xaxis", title: "The history trend line") {
+            VStack(alignment: .leading, spacing: 10) {
+                InfoText("History shows daily synthesis as bars, with a trend line over the top. That line is not a plain average — it's weighted by how your body actually holds vitamin D.")
+
+                InfoText("Circulating 25(OH)D — the storage form a blood test measures — has a half-life of roughly three weeks, so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
+
+                Text("weight = 0.966 ^ (days ago)")
+                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 7)
+                    .background(Color.black.opacity(0.16))
+                    .cornerRadius(8)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    SpecRow(label: "Assumed 25(OH)D half-life", value: "20 days",
+                            note: "Decay factor 0.966/day = 2^(−1/20)")
+                    SpecRow(label: "Seed history", value: "~60 days",
+                            note: "3 half-lives, so the visible window starts accurate")
+                }
+
+                InfoText("So the line rising means you're outpacing that decay — banking stores faster than your body loses them. Falling means the opposite. It's an estimate of a trend, not your actual blood level, which only a test can give.")
+
+                Text("The 20-day figure is a round value within the reported 2–3 week range; individuals vary, and it is not personalised.")
+                    .font(.system(size: 12))
+                    .foregroundColor(.white.opacity(0.75))
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
     private var parametersCard: some View {
         InfoCard(icon: "slider.horizontal.3", title: "Parameters") {
             VStack(alignment: .leading, spacing: 12) {
@@ -532,6 +568,7 @@ private struct ScienceContent: View {
                 Bullet("Altitude is passed to the forecast but no additional multiplier is applied, to avoid double-counting.")
                 Bullet("Individual variation in 7-DHC density, adiposity, genetics and baseline status is not represented. The adaptation factor is a heuristic, not a validated physiological term.")
                 Bullet("The burn limit ignores sunscreen, so it is deliberately conservative if you are wearing any.")
+                Bullet("The history trend line assumes a fixed 20-day 25(OH)D half-life for everyone; true half-life varies by person and is not personalised. It estimates a trend, not a blood level.")
             }
         }
     }
