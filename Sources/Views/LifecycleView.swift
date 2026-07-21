@@ -276,7 +276,7 @@ private struct LifecycleScience: View {
     var body: some View {
         VStack(spacing: 16) {
             InfoCard(icon: "atom", title: "Secosteroid biosynthesis") {
-                LifeText("The full pathway — enzymes, kinetics and regulation — from the sterol branch point to CYP24A1 clearance. Unfamiliar terms are defined in the glossary near the bottom.")
+                GlossaryText("In plain terms: how your body makes vitamin D, switches it on, and puts it to work.\n\nVitamin D is a [secosteroid](glossary://secosteroid) — a steroid hormone with one ring cut open. What follows is its whole journey: from the raw carbon in your food, through the flash of UVB that creates it in your skin, to the two organs that activate it and the genes it finally controls.\n\nUnderlined words open a plain-language definition — tap any you don't know. There's a full glossary at the bottom too.")
             }
 
             ForEach(SciStage.all) { stage in
@@ -672,30 +672,30 @@ private struct SciStage: Identifiable {
         SciStage(icon: "atom",
                  title: "Carbon arrives as acetyl-CoA",
                  molecule: "acetyl-CoA → sterol",
-                 body: "Carbohydrate, fat and protein all converge on [acetyl-CoA](glossary://acetyl-coa), the two-carbon building block. Around eighteen of them are assembled into one 27-carbon sterol through the [mevalonate pathway](glossary://mevalonate) (via squalene and lanosterol).",
+                 body: "Every carbon atom in vitamin D starts on your plate. Sugars, fats and proteins from food are broken down inside your cells into [acetyl-CoA](glossary://acetyl-coa) — a tiny two-carbon unit that is metabolism's universal building block. Trace those carbons back one more step and they were carbon dioxide in the air, pulled into plants by photosynthesis before you ate them.\n\nInside the cell, about eighteen acetyl-CoA units are welded together, step by step, into one 27-carbon [sterol](glossary://sterol) — along the [mevalonate pathway](glossary://mevalonate), via squalene and lanosterol.",
                  aside: "The rate-limiting enzyme of this pathway, HMG-CoA reductase, is the target of statin drugs."),
         SciStage(icon: "arrow.branch",
                  title: "Vitamin D branches before cholesterol",
                  molecule: "7-DHC → cholesterol (DHCR7)",
-                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so circulating or dietary cholesterol cannot re-enter as 7-DHC.",
-                 aside: "The branch self-balances: when cholesterol is abundant it triggers the breakdown of DHCR7, leaving more 7-DHC available for vitamin D."),
+                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so [dietary cholesterol](glossary://dietary-cholesterol) can't be turned back into 7-DHC.",
+                 aside: "The branch even self-regulates. Remember DHCR7 is the enzyme that spends 7-DHC by turning it into cholesterol. So when a cell already has plenty of cholesterol, it destroys some of its DHCR7 — and with fewer of those enzymes at work, less 7-DHC gets used up, leaving more sitting in the skin for sunlight."),
         SciStage(icon: "square.stack.3d.up.fill",
                  title: "The cutaneous 7-DHC pool",
                  molecule: "7-dehydrocholesterol",
-                 body: "The epidermis has no blood supply of its own and makes its own sterols, so the 7-DHC available to UVB is produced locally rather than delivered from the liver. It is most concentrated in the deeper, living layers of the skin.\n\nThe pool declines with age, which accounts for much of the reduced synthetic capacity in older skin."),
+                 body: "Here's the piece that trips people up. All of the above happens inside cells — and your outer skin (the epidermis) has no blood vessels running through it at all. So how does it get raw materials? By diffusion: small nutrients seep upward from the blood-rich layer just below (the dermis) into the skin cells above.\n\nFrom those nutrients, the skin cells build their own [sterols](glossary://sterol) on the spot — including the 7-DHC pool — rather than importing finished cholesterol from the blood. So the stockpile sunlight works on is manufactured locally, right where the light lands. It's most concentrated in the living layers just below the surface, and it thins with age — a large part of why older skin makes less vitamin D."),
         SciStage(icon: "sun.max.fill",
                  title: "UVB opens the B-ring",
                  molecule: "previtamin D3",
                  body: "Photons at 295–300 nm carry the precise energy to break one bond in the 7-DHC ring system, opening it to form the [secosteroid](glossary://secosteroid) [previtamin D3](glossary://previtamin-d3).\n\nNo enzyme performs this step. It is pure photochemistry, and it is the only reason sunlight is required.",
                  aside: "This [action spectrum](glossary://action-spectrum) sits at shorter wavelengths than the one for sunburn — which is why burning is a poor proxy for vitamin D, and why this app weights dose by how high the sun sits."),
-        SciStage(icon: "thermometer.medium",
-                 title: "Membrane-enhanced isomerisation",
-                 molecule: "vitamin D3 (cholecalciferol)",
-                 body: "Previtamin D3 rearranges into [vitamin D3](glossary://cholecalciferol) — an [isomerisation](glossary://isomerisation) driven by body temperature rather than light. Because it forms inside the cell membrane, which stabilises the reactive shape, this runs about ten times faster than it would in free solution."),
         SciStage(icon: "arrow.triangle.branch",
-                 title: "Photostationary state",
+                 title: "The ceiling: photoequilibrium",
                  molecule: "lumisterol3 · tachysterol3",
-                 body: "Continued irradiation diverts previtamin D3 into [lumisterol3 and tachysterol3](glossary://photoproducts) rather than accumulating more — a [photoequilibrium](glossary://photoequilibrium) near 10–15% conversion of available 7-DHC.\n\nThe partitioning is reversible: as previtamin D3 is drawn down, the photoproducts can revert, acting as a reservoir rather than a dead end."),
+                 body: "Under continued sunlight, previtamin D3 stops piling up. It reaches a balance — a [photoequilibrium](glossary://photoequilibrium) — where every new molecule made is matched by one converted away into [lumisterol3 and tachysterol3](glossary://photoproducts).\n\nThat balance sits at only about 10–15% conversion. In other words: of all the 7-DHC in your skin, no more than roughly one molecule in seven is ever previtamin D3 at any one moment — the rest stays as 7-DHC or is parked in the overflow products. This hard ceiling is exactly why sunlight can't give you a toxic dose of vitamin D, only a sunburn. And it's reversible: as previtamin D3 is drawn off (next step), the overflow can flow back."),
+        SciStage(icon: "thermometer.medium",
+                 title: "Body heat finishes the job",
+                 molecule: "vitamin D3 (cholecalciferol)",
+                 body: "The previtamin D3 that isn't diverted slowly turns into [vitamin D3](glossary://cholecalciferol) proper — an [isomerisation](glossary://isomerisation) powered by your body heat, not light.\n\nPrevitamin D3 is a floppy molecule, constantly twisting between shapes, and only one of those shapes can flip into vitamin D3. Packed into the crowded, orderly interior of a cell membrane, it's held in that productive shape much more of the time — so the conversion runs about ten times faster than it would loose in a fluid. Because it's heat-driven and unhurried, your skin keeps releasing fresh vitamin D3 for a day or more after you've come inside."),
         SciStage(icon: "wand.and.stars",
                  title: "The photoproducts are not inert",
                  molecule: "hydroxy-lumisterol · hydroxy-tachysterol",
