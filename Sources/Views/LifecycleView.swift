@@ -316,17 +316,20 @@ private struct LifecycleScience: View {
 
     private var photoData: [PhotoPoint] {
         var out: [PhotoPoint] = []
-        var d: Double = 0
-        while d <= 10 {
-            // previtamin D3 rises fast then holds at a low ceiling (photostationary);
-            // the diversion products keep climbing — lumisterol3 comes to dominate.
-            let pre: Double = 13.0 * (1.0 - exp(-1.1 * d))
-            let tachy: Double = 16.0 * (1.0 - exp(-0.55 * d))
-            let lumi: Double = 55.0 * (1.0 - exp(-0.18 * d))
-            out.append(PhotoPoint(dose: d, species: "previtamin D3", percent: pre))
-            out.append(PhotoPoint(dose: d, species: "tachysterol3", percent: tachy))
-            out.append(PhotoPoint(dose: d, species: "lumisterol3", percent: lumi))
-            d += 0.2
+        var m: Double = 0
+        while m <= 2.0 + 1e-9 {
+            // Previtamin D3 rises to its ~15% ceiling, then eases back as it is
+            // drawn off into the photoproducts. Lumisterol3 and tachysterol3 stay
+            // near zero until the ceiling is approached (~0.55 MED), then climb —
+            // lumisterol3 becoming the dominant product.
+            let pre: Double = 17.5 * (1.0 - exp(-5.0 * m)) * exp(-0.20 * m)
+            let onset: Double = max(0.0, m - 0.55)
+            let lumi: Double = 38.0 * (1.0 - exp(-1.6 * onset))
+            let tachy: Double = 14.0 * (1.0 - exp(-1.9 * onset))
+            out.append(PhotoPoint(dose: m, species: "previtamin D3", percent: pre))
+            out.append(PhotoPoint(dose: m, species: "tachysterol3", percent: tachy))
+            out.append(PhotoPoint(dose: m, species: "lumisterol3", percent: lumi))
+            m += 0.05
         }
         return out
     }
@@ -342,36 +345,41 @@ private struct LifecycleScience: View {
     private var photoequilibriumCard: some View {
         InfoCard(icon: "chart.xyaxis.line", title: "Photoequilibrium") {
             VStack(alignment: .leading, spacing: 10) {
-                LifeText("Previtamin D3 does not accumulate indefinitely. It rises fast, then holds at a photostationary ceiling near 10–15% of available 7-DHC. Beyond that, continued UVB is diverted into lumisterol3 and tachysterol3, which keep climbing as previtamin D3 stays flat — lumisterol3 becomes the dominant product.")
+                LifeText("Previtamin D3 rises to a ceiling of roughly 10–15% of available 7-DHC. Only once it nears that ceiling does continued UVB start diverting into lumisterol3 and tachysterol3 — and as they build, previtamin D3 eases back down. Lumisterol3 becomes the dominant product.")
 
                 Chart(photoData) { p in
                     LineMark(x: .value("Dose", p.dose),
                              y: .value("% of 7-DHC", p.percent))
                         .foregroundStyle(by: .value("Species", p.species))
                         .lineStyle(StrokeStyle(lineWidth: 2.5))
-                    RuleMark(y: .value("Ceiling", 13))
-                        .foregroundStyle(Color(hex: "f5c842").opacity(0.55))
+                        .interpolationMethod(.catmullRom)
+                    RuleMark(y: .value("Ceiling", 15))
+                        .foregroundStyle(.white.opacity(0.3))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                        .annotation(position: .top, alignment: .leading) {
-                            Text("previtamin D3 ceiling")
+                        .annotation(position: .top, alignment: .trailing) {
+                            Text("~15% ceiling")
                                 .font(.system(size: 9, weight: .semibold))
-                                .foregroundColor(Color(hex: "f5c842"))
+                                .foregroundColor(.white.opacity(0.7))
                         }
                 }
                 .chartForegroundStyleScale(photoColors)
                 .chartLegend(position: .bottom, spacing: 8)
-                .chartXAxisLabel("Cumulative UVB dose →", alignment: .center)
+                .chartXScale(domain: 0...2)
+                .chartXAxisLabel("Sun exposure (MED) →", alignment: .center)
                 .chartYAxisLabel("% of initial 7-DHC")
-                .chartXAxis { AxisMarks { _ in
-                    AxisGridLine().foregroundStyle(.white.opacity(0.15))
-                } }
+                .chartXAxis {
+                    AxisMarks(values: [0.0, 0.5, 1.0, 1.5, 2.0]) { _ in
+                        AxisGridLine().foregroundStyle(.white.opacity(0.15))
+                        AxisValueLabel().foregroundStyle(.white.opacity(0.8))
+                    }
+                }
                 .chartYAxis { AxisMarks { _ in
                     AxisGridLine().foregroundStyle(.white.opacity(0.15))
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 200)
 
-                LifeText("Schematic, drawn to the behaviour in Holick 1981 — exact proportions vary with wavelength, temperature and skin type. The flat gold ceiling is the point: it is why sunlight cannot cause vitamin D toxicity.", size: 12)
+                LifeText("Schematic, drawn to the behaviour in Holick 1981 — exact proportions vary with wavelength, temperature and skin type. The ceiling on previtamin D3 is the point: it is why sunlight cannot cause vitamin D toxicity.", size: 12)
             }
         }
     }
