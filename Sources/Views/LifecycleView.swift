@@ -677,7 +677,7 @@ private struct SciStage: Identifiable {
         SciStage(icon: "arrow.branch",
                  title: "Vitamin D branches before cholesterol",
                  molecule: "7-DHC → cholesterol (DHCR7)",
-                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so [dietary cholesterol](glossary://dietary-cholesterol) can't be turned back into 7-DHC.",
+                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so [dietary cholesterol](glossary://dietary-cholesterol) can't be turned back into 7-DHC. And a note on wording: the cholesterol here is the kind cells make inside themselves — [not the same thing as the \"high cholesterol\"](glossary://blood-cholesterol) a blood test reports.",
                  aside: "The branch even self-regulates. Remember DHCR7 is the enzyme that spends 7-DHC by turning it into cholesterol. So when a cell already has plenty of cholesterol, it destroys some of its DHCR7 — and with fewer of those enzymes at work, less 7-DHC gets used up, leaving more sitting in the skin for sunlight."),
         SciStage(icon: "square.stack.3d.up.fill",
                  title: "The cutaneous 7-DHC pool",
