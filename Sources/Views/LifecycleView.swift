@@ -43,6 +43,7 @@ struct LifecycleView: View {
                     }
                     .padding(20)
                 }
+                .glossaryTaps()
             }
             .navigationTitle("The Life of Vitamin D")
             .navigationBarTitleDisplayMode(.inline)
@@ -124,11 +125,7 @@ private struct Aside: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 11))
                 .foregroundColor(Color(hex: "f5c842"))
-            Text(text)
-                .font(.system(size: 12.5))
-                .foregroundColor(.white.opacity(0.88))
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
+            GlossaryText(text, size: 12.5, opacity: 0.88)
         }
         .padding(11)
         .background(Color.white.opacity(0.13))
@@ -155,7 +152,7 @@ private struct StageCard: View {
     var body: some View {
         InfoCard(icon: icon, title: title) {
             if let molecule { MoleculeChip(text: molecule) }
-            LifeText(text)
+            GlossaryText(text)
             if let aside { Aside(aside) }
         }
     }
@@ -578,11 +575,11 @@ private struct LifecycleScience: View {
     private var glossaryCard: some View {
         InfoCard(icon: "character.book.closed.fill", title: "Glossary") {
             VStack(alignment: .leading, spacing: 8) {
-                LifeText("Tap a term to expand.", size: 12)
+                LifeText("Tap a term to expand. Highlighted words elsewhere open these too.", size: 12)
                     .foregroundColor(.white.opacity(0.7))
-                ForEach(Array(GlossaryEntry.all.enumerated()), id: \.element.id) { i, e in
+                ForEach(Array(Glossary.all.enumerated()), id: \.element.id) { i, e in
                     GlossaryRow(term: e.term, definition: e.definition)
-                    if i < GlossaryEntry.all.count - 1 {
+                    if i < Glossary.all.count - 1 {
                         Divider().overlay(Color.white.opacity(0.15))
                     }
                 }
@@ -675,12 +672,12 @@ private struct SciStage: Identifiable {
         SciStage(icon: "atom",
                  title: "Carbon arrives as acetyl-CoA",
                  molecule: "acetyl-CoA → sterol",
-                 body: "Carbohydrate, fat and protein all converge on acetyl-CoA, the two-carbon building block. Around eighteen of them are assembled into one 27-carbon sterol through the mevalonate pathway (via squalene and lanosterol).",
+                 body: "Carbohydrate, fat and protein all converge on [acetyl-CoA](glossary://acetyl-coa), the two-carbon building block. Around eighteen of them are assembled into one 27-carbon sterol through the [mevalonate pathway](glossary://mevalonate) (via squalene and lanosterol).",
                  aside: "The rate-limiting enzyme of this pathway, HMG-CoA reductase, is the target of statin drugs."),
         SciStage(icon: "arrow.branch",
                  title: "Vitamin D branches before cholesterol",
                  molecule: "7-DHC → cholesterol (DHCR7)",
-                 body: "The pathway terminates when DHCR7 converts 7-dehydrocholesterol into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so circulating or dietary cholesterol cannot re-enter as 7-DHC.",
+                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so circulating or dietary cholesterol cannot re-enter as 7-DHC.",
                  aside: "The branch self-balances: when cholesterol is abundant it triggers the breakdown of DHCR7, leaving more 7-DHC available for vitamin D."),
         SciStage(icon: "square.stack.3d.up.fill",
                  title: "The cutaneous 7-DHC pool",
@@ -689,38 +686,38 @@ private struct SciStage: Identifiable {
         SciStage(icon: "sun.max.fill",
                  title: "UVB opens the B-ring",
                  molecule: "previtamin D3",
-                 body: "Photons at 295–300 nm carry the precise energy to break one bond in the 7-DHC ring system, opening it to form the secosteroid previtamin D3.\n\nNo enzyme performs this step. It is pure photochemistry, and it is the only reason sunlight is required.",
-                 aside: "This action spectrum sits at shorter wavelengths than the one for sunburn — which is why burning is a poor proxy for vitamin D, and why this app weights dose by how high the sun sits."),
+                 body: "Photons at 295–300 nm carry the precise energy to break one bond in the 7-DHC ring system, opening it to form the [secosteroid](glossary://secosteroid) [previtamin D3](glossary://previtamin-d3).\n\nNo enzyme performs this step. It is pure photochemistry, and it is the only reason sunlight is required.",
+                 aside: "This [action spectrum](glossary://action-spectrum) sits at shorter wavelengths than the one for sunburn — which is why burning is a poor proxy for vitamin D, and why this app weights dose by how high the sun sits."),
         SciStage(icon: "thermometer.medium",
                  title: "Membrane-enhanced isomerisation",
                  molecule: "vitamin D3 (cholecalciferol)",
-                 body: "Previtamin D3 rearranges into vitamin D3, driven by body temperature rather than light. Because it forms inside the cell membrane, which stabilises the reactive shape, this runs about ten times faster than it would in free solution."),
+                 body: "Previtamin D3 rearranges into [vitamin D3](glossary://cholecalciferol) — an [isomerisation](glossary://isomerisation) driven by body temperature rather than light. Because it forms inside the cell membrane, which stabilises the reactive shape, this runs about ten times faster than it would in free solution."),
         SciStage(icon: "arrow.triangle.branch",
                  title: "Photostationary state",
                  molecule: "lumisterol3 · tachysterol3",
-                 body: "Continued irradiation diverts previtamin D3 into lumisterol3 and tachysterol3 rather than accumulating more, plateauing near 10–15% conversion of available 7-DHC.\n\nThe partitioning is reversible: as previtamin D3 is drawn down, the photoproducts can revert, acting as a reservoir rather than a dead end."),
+                 body: "Continued irradiation diverts previtamin D3 into [lumisterol3 and tachysterol3](glossary://photoproducts) rather than accumulating more — a [photoequilibrium](glossary://photoequilibrium) near 10–15% conversion of available 7-DHC.\n\nThe partitioning is reversible: as previtamin D3 is drawn down, the photoproducts can revert, acting as a reservoir rather than a dead end."),
         SciStage(icon: "wand.and.stars",
                  title: "The photoproducts are not inert",
                  molecule: "hydroxy-lumisterol · hydroxy-tachysterol",
-                 body: "Long assumed to be dead ends, lumisterol3 and tachysterol3 are converted by the enzyme CYP11A1 into families of active metabolites, detected in human skin and blood, with antioxidant, DNA-protective and anti-inflammatory activity.",
+                 body: "Long assumed to be dead ends, lumisterol3 and tachysterol3 are converted by the enzyme [CYP11A1](glossary://cyp) into families of active metabolites, detected in human skin and blood, with antioxidant, DNA-protective and anti-inflammatory activity.",
                  aside: "These arise only from photochemistry. No oral preparation delivers them."),
         SciStage(icon: "drop.fill",
                  title: "Transport to the liver",
                  molecule: "D3 · binding protein",
-                 body: "Vitamin D3 leaves the skin bound to vitamin D binding protein and travels to the liver. Because it seeps out gradually, sunlight delivers a slow, sustained release over days rather than a spike."),
+                 body: "Vitamin D3 leaves the skin bound to [vitamin D binding protein](glossary://dbp) and travels to the liver. Because it seeps out gradually, sunlight delivers a slow, sustained release over days rather than a spike."),
         SciStage(icon: "cross.case.fill",
                  title: "Hepatic 25-hydroxylation",
                  molecule: "25(OH)D — calcifediol",
-                 body: "In the liver, CYP2R1 adds a hydroxyl group to make 25-hydroxyvitamin D — the storage and transport form, with a half-life of two to three weeks, and the molecule a blood test measures.\n\nThis step is largely substrate-driven, so intake and sun exposure translate fairly directly into the level in your blood."),
+                 body: "In the liver, CYP2R1 adds a [hydroxyl group](glossary://hydroxylation) to make [25-hydroxyvitamin D](glossary://25ohd) — the storage and transport form, with a [half-life](glossary://half-life) of two to three weeks, and the molecule a blood test measures.\n\nThis step is largely substrate-driven, so intake and sun exposure translate fairly directly into the level in your blood."),
         SciStage(icon: "bolt.fill",
                  title: "Renal activation",
                  molecule: "1,25(OH)₂D — calcitriol",
-                 body: "The kidney, via CYP27B1, adds a second hydroxyl to make calcitriol, the genuinely active hormone. Unlike the liver step, this one is tightly governed — raised by parathyroid hormone, restrained by FGF23 and by calcitriol itself.",
+                 body: "The kidney, via CYP27B1, adds a second hydroxyl to make [calcitriol](glossary://calcitriol), the genuinely active hormone. Unlike the liver step, this one is tightly governed — raised by [parathyroid hormone, restrained by FGF23](glossary://pth-fgf23) and by calcitriol itself.",
                  aside: "Immune cells, skin and other tissues run this step locally too, making calcitriol for their own use rather than for the bloodstream."),
         SciStage(icon: "dna",
                  title: "Gene regulation",
                  molecule: "VDR · RXR",
-                 body: "Calcitriol binds the vitamin D receptor, which pairs with the retinoid X receptor and settles onto specific stretches of DNA, turning genes up or down — across calcium absorption, bone remodelling, immunity and cell growth.\n\nIt is a signal, not a fuel: it issues instructions rather than being consumed."),
+                 body: "Calcitriol binds the [vitamin D receptor, which pairs with the retinoid X receptor](glossary://vdr) and settles onto specific stretches of DNA, turning genes up or down — across calcium absorption, bone remodelling, immunity and cell growth.\n\nIt is a signal, not a fuel: it issues instructions rather than being consumed."),
         SciStage(icon: "arrow.uturn.down",
                  title: "Self-limiting breakdown",
                  molecule: "CYP24A1 → calcitroic acid",
@@ -750,53 +747,6 @@ private struct SciContrast: Identifiable {
         SciContrast(icon: "questionmark.circle.fill",
                     title: "The evidence gap",
                     body: "Studies link high vitamin D to lower rates of heart disease, diabetes, cancer and early death — yet randomised supplement trials mostly fail to reproduce those benefits.\n\nThe favoured reading is that low vitamin D substantially reflects ill health and little sun rather than causing the outcomes, in which case topping up the reading was never going to reproduce the sunshine.")
-    ]
-}
-
-private struct GlossaryEntry: Identifiable {
-    let id = UUID()
-    let term: String
-    let definition: String
-
-    static let all: [GlossaryEntry] = [
-        GlossaryEntry(term: "Secosteroid",
-                      definition: "A steroid whose four-ring core has had one ring cut open. Vitamin D is a secosteroid — the opened B-ring is what lets it act as a hormone."),
-        GlossaryEntry(term: "7-DHC (7-dehydrocholesterol)",
-                      definition: "The immediate precursor to cholesterol, and the molecule UVB converts to previtamin D3. Also called provitamin D3."),
-        GlossaryEntry(term: "DHCR7",
-                      definition: "The enzyme that turns 7-DHC into cholesterol — the branch point between making cholesterol and leaving 7-DHC free for vitamin D."),
-        GlossaryEntry(term: "Mevalonate pathway",
-                      definition: "The chain of reactions that builds sterols from acetyl-CoA, via squalene and lanosterol. Its rate-limiting enzyme, HMG-CoA reductase, is what statins block."),
-        GlossaryEntry(term: "Previtamin D3",
-                      definition: "The immediate, unstable product of UVB acting on 7-DHC. It rearranges into vitamin D3 over hours, driven by body heat."),
-        GlossaryEntry(term: "Photoequilibrium",
-                      definition: "A balance point under continued light where previtamin D3 stops accumulating and further UVB diverts it into other molecules instead. This ceiling prevents vitamin D toxicity from sun."),
-        GlossaryEntry(term: "Isomerisation",
-                      definition: "A molecule rearranging into a different shape with the same atoms. Previtamin D3 → vitamin D3 is a heat-driven isomerisation."),
-        GlossaryEntry(term: "Lumisterol & tachysterol",
-                      definition: "The two molecules previtamin D3 is diverted into once the ceiling is reached. Long thought inert, they are now known to yield biologically active metabolites — but they make no vitamin D."),
-        GlossaryEntry(term: "Cholecalciferol (vitamin D3)",
-                      definition: "The form made in skin and found in supplements. Not yet active — it must be hydroxylated twice, in liver then kidney."),
-        GlossaryEntry(term: "DBP (vitamin D binding protein)",
-                      definition: "The carrier protein that ferries vitamin D and its metabolites through the blood."),
-        GlossaryEntry(term: "25(OH)D (calcifediol)",
-                      definition: "The storage form made in the liver, with a half-life of weeks. This is what a vitamin D blood test measures."),
-        GlossaryEntry(term: "1,25(OH)₂D (calcitriol)",
-                      definition: "The active hormone, made mainly in the kidney. Short-lived and tightly regulated — the working form that acts on your genes."),
-        GlossaryEntry(term: "Hydroxylation",
-                      definition: "Adding an –OH group to a molecule. Vitamin D is activated by two hydroxylations, at carbon 25 (liver) then carbon 1 (kidney)."),
-        GlossaryEntry(term: "CYP enzymes",
-                      definition: "Cytochrome P450 enzymes. Several handle vitamin D: CYP2R1 (liver activation), CYP27B1 (kidney activation), CYP24A1 (breakdown), CYP11A1 (photoproduct metabolites)."),
-        GlossaryEntry(term: "VDR & RXR",
-                      definition: "The vitamin D receptor and its partner, the retinoid X receptor. Calcitriol binds VDR; the VDR–RXR pair docks onto DNA to switch genes on or off."),
-        GlossaryEntry(term: "PTH & FGF23",
-                      definition: "Hormones that tune vitamin D activation. Parathyroid hormone (PTH) raises it when calcium is low; FGF23 restrains it."),
-        GlossaryEntry(term: "Action spectrum",
-                      definition: "How effective each wavelength of light is at driving a reaction. The vitamin D action spectrum peaks at shorter wavelengths than the sunburn one."),
-        GlossaryEntry(term: "MED (minimal erythemal dose)",
-                      definition: "The smallest UV dose that leaves skin faintly pink a day later. A personalised unit of sunburn risk that already accounts for skin type and sun strength — the unit this app tracks."),
-        GlossaryEntry(term: "Half-life",
-                      definition: "The time for half of a substance to clear. Vitamin D3 ~1 day, 25(OH)D ~3 weeks, calcitriol ~half a day.")
     ]
 }
 

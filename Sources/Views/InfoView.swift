@@ -45,6 +45,7 @@ struct InfoView: View {
                     }
                     .padding(20)
                 }
+                .glossaryTaps()
             }
             .navigationTitle("How It Works")
             .navigationBarTitleDisplayMode(.inline)
@@ -153,7 +154,7 @@ private struct BasicsContent: View {
             }
 
             InfoCard(icon: "timer", title: "Why we count sunburn, not minutes") {
-                InfoText("\"20 minutes of sun\" means nothing on its own. Twenty minutes at midday in summer is a world away from twenty minutes at 8am in winter.\n\nSo instead of the clock, the app tracks how much of a sunburn you've earned. One full unit — an MED, or minimal erythemal dose — is the amount that would leave your skin just faintly pink the next day. It automatically accounts for how strong the sun is and how easily you burn.\n\nMost of the good vitamin D arrives well before you reach that point, which is why the burn limit is the number worth watching.")
+                GlossaryText("\"20 minutes of sun\" means nothing on its own. Twenty minutes at midday in summer is a world away from twenty minutes at 8am in winter.\n\nSo instead of the clock, the app tracks how much of a sunburn you've earned. One full unit — an [MED, or minimal erythemal dose](glossary://med) — is the amount that would leave your skin just faintly pink the next day. It automatically accounts for how strong the sun is and how easily you burn.\n\nMost of the good vitamin D arrives well before you reach that point, which is why the burn limit is the number worth watching.")
             }
 
             InfoCard(icon: "sun.haze.fill", title: "Why midday beats morning") {
@@ -208,7 +209,7 @@ private struct ScienceContent: View {
     private var modelCard: some View {
         InfoCard(icon: "function", title: "The model") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("Dose is expressed as a fraction of an MED — the same unit the photobiology literature uses — and synthesis saturates rather than accumulating linearly:")
+                GlossaryText("Dose is expressed as a fraction of an [MED](glossary://med) — the same unit the photobiology literature uses — and synthesis saturates rather than accumulating linearly:")
 
                 Text("D(m) = D_max × (1 − e^(−k·m))")
                     .font(.system(size: 15, weight: .semibold, design: .monospaced))
@@ -320,7 +321,7 @@ private struct ScienceContent: View {
     private var elevationCard: some View {
         InfoCard(icon: "angle", title: "Solar elevation weighting") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("MED is erythemally weighted, but the vitamin D action spectrum sits further into the UVB. At low sun the longer atmospheric path strips the short UVB that drives synthesis while leaving the wavelengths that drive erythema — so an MED earned at 8am yields far less vitamin D than one earned at noon.")
+                GlossaryText("[MED](glossary://med) is erythemally weighted, but the vitamin D [action spectrum](glossary://action-spectrum) sits further into the UVB. At low sun the longer atmospheric path strips the short UVB that drives synthesis while leaving the wavelengths that drive erythema — so an MED earned at 8am yields far less vitamin D than one earned at noon.")
 
                 Text("quality = min(1, (sin θ ÷ sin 50°)^1.5)")
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
@@ -466,7 +467,7 @@ private struct ScienceContent: View {
             VStack(alignment: .leading, spacing: 10) {
                 InfoText("History shows daily synthesis as bars, with a trend line over the top. That line is not a plain average — it's weighted by how your body actually holds vitamin D.")
 
-                InfoText("Circulating 25(OH)D — the storage form a blood test measures — has a half-life of roughly three weeks, so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
+                GlossaryText("Circulating [25(OH)D](glossary://25ohd) — the storage form a blood test measures — has a [half-life](glossary://half-life) of roughly three weeks, so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
 
                 Text("weight = 0.966 ^ (days ago)")
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
