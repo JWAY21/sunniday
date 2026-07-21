@@ -149,13 +149,16 @@ private struct GlossaryDefinitionSheet: View {
                            startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
+            VStack(alignment: .leading, spacing: 12) {
+                // Pinned header
+                HStack(alignment: .top) {
                     Image(systemName: "character.book.closed.fill")
                         .font(.system(size: 15, weight: .semibold))
+                        .padding(.top, 3)
                     Text(entry.term)
                         .font(.system(size: 20, weight: .bold))
-                    Spacer()
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
                     Button {
                         dismiss()
                     } label: {
@@ -166,17 +169,20 @@ private struct GlossaryDefinitionSheet: View {
                 }
                 .foregroundColor(.white)
 
-                Text(entry.definition)
-                    .font(.system(size: 15))
-                    .foregroundColor(.white.opacity(0.92))
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Spacer()
+                // Scrollable definition — long entries don't get clipped
+                ScrollView {
+                    Text(entry.definition)
+                        .font(.system(size: 15))
+                        .foregroundColor(.white.opacity(0.92))
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 8)
+                }
             }
             .padding(24)
         }
-        .presentationDetents([.height(240)])
+        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
 }
