@@ -210,17 +210,26 @@ struct SessionCompletionSheet: View {
 
     // MARK: Recalculation (debounced 0.5 s)
     //
-    // The accumulated session amount scales linearly with duration — if the user
-    // adds or removes time we apply the same ratio to the original amount.
-    // This preserves the UV / skin / clothing weighting from the live session
-    // without needing to re-run the full kinetics model.
+    // When the user adjusts the start/end, re-integrate the kinetics model over
+    // the new window using that day's cached hourly UV and solar-elevation
+    // weighting — so extending a session back into weaker morning sun is credited
+    // at the real (lower) rate rather than the tracked-period rate. Falls back to
+    // simple linear scaling only if the day's UV isn't cached.
     private func scheduleRecalculation() {
         recalcTask?.cancel()
         recalcTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 500_000_000)   // 0.5 s
             guard !Task.isCancelled, originalDuration > 0 else { return }
-            let newDuration = max(0, selectedEndTime.timeIntervalSince(selectedStartTime))
-            currentAmount = sessionAmount * (newDuration / originalDuration)
+
+            let reintegrated = vitaminDCalculator.synthesisedIU(from: selectedStartTime,
+                                                                to: selectedEndTime)
+            if reintegrated > 0 {
+                currentAmount = reintegrated
+            } else {
+                // Cache unavailable — fall back to linear duration scaling.
+                let newDuration = max(0, selectedEndTime.timeIntervalSince(selectedStartTime))
+                currentAmount = sessionAmount * (newDuration / originalDuration)
+            }
         }
     }
 

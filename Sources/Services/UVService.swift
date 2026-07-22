@@ -146,6 +146,14 @@ class UVService: ObservableObject {
         cloudCoverOverride = percent
     }
 
+    /// Multiplier the active manual cloud override applies to raw forecast UV
+    /// (1.0 when no override). Used to re-integrate an adjusted session's window
+    /// on the same "clearer/cloudier than forecast" basis the user tracked with.
+    var cloudOverrideFactor: Double {
+        guard cloudCoverOverride != nil, apiUV > 0 else { return 1.0 }
+        return currentUV / apiUV
+    }
+
     /// Remove the override and restore API values.
     func clearCloudOverride() {
         guard cloudCoverOverride != nil else { return }

@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreLocation
 import HealthKit
 import UserNotifications
 import WidgetKit
@@ -626,6 +627,49 @@ class VitaminDCalculator: ObservableObject {
     /// to a ~44× penalty for type VI.
     private var yieldModifiers: Double {
         clothingLevel.exposureFactor * ageFactor * currentAdaptationFactor
+    }
+
+    /// Re-integrate synthesised vitamin D (IU) over an arbitrary window earlier
+    /// today, using that day's cached hourly UV and the solar-elevation
+    /// weighting — the same kinetics a live session uses.
+    ///
+    /// This replaces linearly scaling a logged session's amount by its duration.
+    /// Linear scaling credits every added minute at the tracked-period rate, so
+    /// extending a session back into weaker morning sun (lower UV, low sun angle)
+    /// over-counts badly, and it ignores the saturation plateau. Integrating the
+    /// real per-hour UV and elevation quality fixes both.
+    ///
+    /// Returns 0 when the day's UV isn't cached (caller should fall back).
+    func synthesisedIU(from start: Date, to end: Date) -> Double {
+        guard end > start,
+              let uvService = uvService,
+              let medAtUV1 = Self.medMinutesAtUV1[skinType.rawValue], medAtUV1 > 0
+        else { return 0 }
+
+        let lat = UserDefaults.standard.double(forKey: "lastKnownLatitude")
+        let lon = UserDefaults.standard.double(forKey: "lastKnownLongitude")
+        let location = (lat != 0 || lon != 0) ? CLLocation(latitude: lat, longitude: lon) : nil
+
+        let points = uvService.historicalUVPoints(from: start, to: end, near: location)
+        guard points.count >= 2 else { return 0 }
+
+        // Keep the same manual cloud override the session tracked with.
+        let overrideFactor = uvService.cloudOverrideFactor
+
+        // Trapezoidal integration of the elevation-weighted MED dose.
+        var dose = 0.0
+        for i in 0..<(points.count - 1) {
+            let (t0, uv0) = points[i]
+            let (t1, uv1) = points[i + 1]
+            let minutes = t1.timeIntervalSince(t0) / 60.0
+            guard minutes > 0 else { continue }
+            let mid = t0.addingTimeInterval(t1.timeIntervalSince(t0) / 2)
+            let uv = ((uv0 + uv1) / 2.0) * overrideFactor
+            let quality = solarElevationDegrees(at: mid)
+                .map { vitaminDQualityFactor(forElevationDegrees: $0) } ?? 1.0
+            dose += (uv / medAtUV1) * quality * minutes
+        }
+        return synthesisedIU(atMEDFraction: dose) * yieldModifiers
     }
 
     /// MED fraction accrued per minute of exposure at a given UV.
