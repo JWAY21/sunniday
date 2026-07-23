@@ -543,7 +543,7 @@ private struct LifecycleScience: View {
                 LifeSpecRow(label: "20S(OH)L3 · 25(OH)T3", value: "—",
                             note: "CYP11A1 photoproduct metabolites · skin · detected in epidermis and serum")
 
-                LifeText("The half-life spread is why the storage form responds to habits over months while the active hormone can be retuned within a day.", size: 12)
+                LifeText("Note the photoproduct metabolites at the foot of the table: they arise only from light, and have no oral equivalent.", size: 12)
                     .padding(.top, 2)
             }
         }
@@ -784,6 +784,9 @@ private struct SciReference: Identifiable {
         SciReference(title: "Autier P et al. (2014), Lancet Diabetes Endocrinol 2:76–89",
                      note: "The observational–interventional gap; argues low 25(OH)D substantially indexes ill health.",
                      url: "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(13)70165-7/abstract"),
+        SciReference(title: "Endocrine Society (2024) — Vitamin D for the Prevention of Disease",
+                     note: "Current clinical guideline. Recommends against routine 25(OH)D screening in healthy adults, and against exceeding standard intakes for most under 75 — authoritative, up-to-date support for the evidence gap above.",
+                     url: "https://www.endocrine.org/clinical-practice-guidelines/vitamin-d-for-prevention-of-disease"),
         SciReference(title: "Young AR et al. (2021), PNAS 118(40)",
                      note: "In vivo action spectrum revision; sunburn-weighted dose poorly predicts synthesis. Underpins this app's elevation weighting.",
                      url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8501902/")

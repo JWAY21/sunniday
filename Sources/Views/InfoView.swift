@@ -467,7 +467,7 @@ private struct ScienceContent: View {
             VStack(alignment: .leading, spacing: 10) {
                 InfoText("History shows daily synthesis as bars, with a trend line over the top. That line is not a plain average — it's weighted by how your body actually holds vitamin D.")
 
-                GlossaryText("Circulating [25(OH)D](glossary://25ohd) — the storage form a blood test measures — has a [half-life](glossary://half-life) of roughly three weeks, so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
+                GlossaryText("Circulating [25(OH)D](glossary://25ohd) — the storage form a blood test measures — has a [half-life](glossary://half-life) of roughly three weeks (the model uses a fixed 20 days), so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
 
                 Text("weight = 0.966 ^ (days ago)")
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
@@ -545,7 +545,7 @@ private struct ScienceContent: View {
                     Text("Age")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white.opacity(0.85))
-                    InfoText("Cutaneous 7-dehydrocholesterol declines with age: full capacity to 20, then about 1% per year, floored at 25% from age 70. Applied only when age is available from Health.")
+                    InfoText("Modelled as full capacity to age 20, then declining 1.5% a year to a floor of 25% at age 70. Applied only when age is available from Health.\n\nThis one is contested — see limitations.")
                 }
             }
         }
@@ -568,6 +568,7 @@ private struct ScienceContent: View {
                 Bullet("Reflective surfaces — snow, water, sand, concrete — add UV that is not modelled.")
                 Bullet("Altitude is passed to the forecast but no additional multiplier is applied, to avoid double-counting.")
                 Bullet("Individual variation in 7-DHC density, adiposity, genetics and baseline status is not represented. The adaptation factor is a heuristic, not a validated physiological term.")
+                Bullet("The age decline is contested. It follows MacLaughlin & Holick (1985), which found a more-than-twofold drop with age. But a 2024 study measuring skin 7-DHC directly found no significant difference between healthy older and younger adults, and a similar vitamin D response to UV — suggesting older adults' typically lower status may owe more to behaviour (less skin exposed, less time outdoors) than to a fixed biological ceiling. Treat the age factor as one plausible model, not settled fact.")
                 Bullet("The burn limit ignores sunscreen, so it is deliberately conservative if you are wearing any.")
                 Bullet("The history trend line assumes a fixed 20-day 25(OH)D half-life for everyone; true half-life varies by person and is not personalised. It estimates a trend, not a blood level.")
             }
@@ -591,6 +592,12 @@ private struct ScienceContent: View {
                 RefLink(title: "Holick's rule and vitamin D from sunlight",
                         detail: "Notes the rule derives from a fluorescent-lamp spectrum; solar UV is ~1.32× more previtamin-D-effective per erythemal unit. Basis for the 1.25 calibration.",
                         url: "https://www.sciencedirect.com/science/article/abs/pii/S0960076010001925")
+                RefLink(title: "MacLaughlin JA, Holick MF (1985)",
+                        detail: "Aging decreases the capacity of human skin to produce vitamin D3. J Clin Invest 76(4):1536–8. — the original basis for this app's age-decline factor.",
+                        url: "https://www.jci.org/articles/view/112134")
+                RefLink(title: "Borecka O et al. (2024)",
+                        detail: "Comparative study of healthy older and younger adults shows they have the same skin concentration of 7-dehydrocholesterol and similar response to UVR. Nutrients. — found no significant age difference in skin 7-DHC or vitamin D response; the basis for treating the age factor as contested.",
+                        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11053405/")
                 RefLink(title: "Pope SJ et al. (2008)",
                         detail: "Action spectrum conversion factors that change erythemally weighted to previtamin D3-weighted UV doses. Photochem Photobiol 84(5).",
                         url: "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1751-1097.2008.00373.x")

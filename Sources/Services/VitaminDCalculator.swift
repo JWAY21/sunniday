@@ -601,11 +601,17 @@ class VitaminDCalculator: ObservableObject {
 
     /// Vitamin D synthesis decreases with age as cutaneous 7-dehydrocholesterol
     /// declines (~25% of youthful capacity by 70). Only applied when we have age.
+    /// Declines linearly from full capacity at 20 to a 25% floor at 70 — a
+    /// slope of 1.5%/year, so the ramp actually reaches the floor.
+    ///
+    /// (The previous 1%/year slope only reached 50% by 70 and was then clamped
+    /// straight to 25%, which meant a 70th birthday halved the estimate
+    /// overnight.) Note the age decline itself is contested — see the info
+    /// screen's limitations.
     private var ageFactor: Double {
         guard let age = userAge else { return 1.0 }
-        if age <= 20 { return 1.0 }
-        if age >= 70 { return 0.25 }
-        return max(0.25, 1.0 - Double(age - 20) * 0.01)
+        let declined = 1.0 - Double(age - 20) * 0.015
+        return min(1.0, max(0.25, declined))
     }
 
     /// Weights an erythemal dose increment into a vitamin-D-effective one.
