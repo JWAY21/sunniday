@@ -469,32 +469,32 @@ private struct ScienceContent: View {
     private var historyCard: some View {
         InfoCard(icon: "chart.bar.xaxis", title: "The history trend line") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("History shows daily synthesis as bars, with a trend line over the top. That line is not a plain average — it's weighted by how your body actually holds vitamin D.")
+                InfoText("History shows daily synthesis as bars. The line over the top — the modelled trend — is a different thing: an estimate of the reserve those days build up, on its own relative scale (right axis).")
 
-                GlossaryText("Circulating [25(OH)D](glossary://25ohd) — the storage form a blood test measures — has a [half-life](glossary://half-life) of roughly three weeks (the model uses a fixed 20 days), so a day of sun keeps contributing to your reserve for weeks afterward, fading as it goes. The trend line reproduces that: each past day is discounted by its age.")
+                GlossaryText("Vitamin D's storage form, [25(OH)D](glossary://25ohd), has a [half-life](glossary://half-life) of about 2–3 weeks, so what you make doesn't vanish overnight — it accumulates and clears slowly. That's the standard [one-compartment model](glossary://one-compartment): each day adds intake, and the store loses a fixed fraction:")
 
-                Text("weight = 0.966 ^ (days ago)")
-                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                Text("store → store × 0.966 + today's intake")
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 7)
                     .background(Color.black.opacity(0.16))
                     .cornerRadius(8)
 
+                InfoText("So a good run of days lifts the line; a lazy week lets it fall. It's shown as a relative reserve where 100% is the level a sustained daily-goal habit holds.")
+
+                InfoText("It also saturates: the real serum response is curvilinear — each extra dose raises the store less as it fills (the per-µg response roughly halves from 1,000 to 4,000 IU/day and plateaus), and higher stores clear faster. So doubling your sun doesn't double the reserve.")
+
                 VStack(alignment: .leading, spacing: 5) {
                     SpecRow(label: "Assumed 25(OH)D half-life", value: "20 days",
-                            note: "Decay factor 0.966/day = 2^(−1/20)")
-                    SpecRow(label: "Seed history", value: "~60 days",
-                            note: "3 half-lives, so the visible window starts accurate")
+                            note: "Round value in the reported 2–3 week range; not personalised")
+                    SpecRow(label: "Reference (100%)", value: "sustained daily goal",
+                            note: "The store a steady daily-goal habit maintains")
                 }
 
-                InfoText("So the line rising means you're outpacing that decay — banking stores faster than your body loses them. Falling means the opposite. It's an estimate of a trend, not your actual blood level, which only a test can give.")
+                Bullet("This is a modelled trend, not a blood level. The app estimates cutaneous synthesis in mcg, which is not calibrated to serum 25(OH)D (nmol/L) — only a blood test gives that. Read the direction and relative height, not the exact number.")
 
-                Text("The 20-day figure is a round value within the reported 2–3 week range; individuals vary, and it is not personalised.")
-                    .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.75))
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                InfoText("An earlier version drew a normalized weighted average, which tracks your typical recent daily rate — it sat flat under steady sun and so couldn't show a reserve building. The reservoir model fixes that.")
             }
         }
     }
@@ -575,7 +575,7 @@ private struct ScienceContent: View {
                 Bullet("The age decline is contested. It follows MacLaughlin & Holick (1985), which found a more-than-twofold drop with age. But a 2024 study measuring skin 7-DHC directly found no significant difference between healthy older and younger adults, and a similar vitamin D response to UV — suggesting older adults' typically lower status may owe more to behaviour (less skin exposed, less time outdoors) than to a fixed biological ceiling. Treat the age factor as one plausible model, not settled fact.")
                 Bullet("The burn limit ignores sunscreen, so it is deliberately conservative if you are wearing any.")
                 Bullet("The saturation ceiling is shared across a day and resets at local midnight. That's a simplification: real recovery is gradual — previtamin D3 clears and the 7-DHC pool refills over roughly a day — so a session spanning midnight gets an artificial fresh start, and back-to-back days don't carry any residue.")
-                Bullet("The history trend line assumes a fixed 20-day 25(OH)D half-life for everyone; true half-life varies by person and is not personalised. It estimates a trend, not a blood level.")
+                Bullet("The history trend line is a relative modelled reserve, not a blood level — synthesised mcg isn't calibrated to serum nmol/L. It assumes a fixed 20-day half-life for everyone and a generic saturation; a real body has fat stores, protein binding, faster clearance at high levels and feedback that it doesn't capture.")
             }
         }
     }
@@ -609,6 +609,12 @@ private struct ScienceContent: View {
                 RefLink(title: "Webb AR et al. (2023)",
                         detail: "Previtamin D action spectrum: challenging CIE towards a standard. — the spectrum remains formally unsettled.",
                         url: "https://journals.sagepub.com/doi/full/10.1177/14771535221122937")
+                RefLink(title: "Jones G (2008)",
+                        detail: "Pharmacokinetics of vitamin D toxicity. Am J Clin Nutr. — 25(OH)D3 circulating half-life ~15 days; basis for the history trend line's decay.",
+                        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4207933/")
+                RefLink(title: "Gallagher JC et al. (2012)",
+                        detail: "Dose-response to vitamin D supplementation in postmenopausal women. Ann Intern Med 156:425–37. — serum 25(OH)D response is curvilinear and plateaus; basis for the trend line's saturation.",
+                        url: "https://www.acpjournals.org/doi/10.7326/0003-4819-156-6-201203200-00005")
                 RefLink(title: "Open-Meteo",
                         detail: "UV index, clear-sky UV, cloud cover and sun times. No API key, no tracking.",
                         url: "https://open-meteo.com")

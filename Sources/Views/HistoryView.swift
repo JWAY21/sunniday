@@ -59,7 +59,7 @@ struct HistoryView: View {
     struct MAPoint: Identifiable {
         let id = UUID()
         let date: Date
-        let iu: Double   // half-life-weighted moving average in IU
+        let iu: Double   // reserve %, relative to a sustained-goal store (not mcg)
     }
 
     // MARK: State
@@ -71,6 +71,16 @@ struct HistoryView: View {
     // MARK: Helpers
     private var unitLabel: String { usesMCG ? "mcg" : "IU" }
     private func convert(_ iu: Double) -> Double { usesMCG ? iu / 40.0 : iu }
+
+    // The bars' y-axis top (with headroom). The reserve trend is drawn against
+    // this same domain but on its own 0–200% scale via trendPlotY, so its
+    // movement reads clearly instead of being flattened by the tall bars.
+    private var chartYMax: Double {
+        max((bars.map { convert($0.iu) }.max() ?? 1) * 1.15, 1)
+    }
+    private func trendPlotY(_ pct: Double) -> Double {
+        min(max(pct, 0), 200) / 200.0 * chartYMax
+    }
 
     private var average: Double {
         guard !bars.isEmpty else { return 0 }
@@ -132,17 +142,20 @@ struct HistoryView: View {
                                         .cornerRadius(2)
                                     }
 
-                                    // Half-life-weighted moving average line
+                                    // Modelled reserve trend — plotted on its own
+                                    // relative scale (see trendPlotY), so its
+                                    // movement is visible against the tall bars.
                                     ForEach(maPoints) { pt in
                                         LineMark(
                                             x: .value("Date", pt.date, unit: .day),
-                                            y: .value("Trend", convert(pt.iu))
+                                            y: .value("Reserve", trendPlotY(pt.iu))
                                         )
                                         .foregroundStyle(Color.yellow.opacity(0.9))
                                         .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
                                         .interpolationMethod(.catmullRom)
                                     }
                                 }
+                                .chartYScale(domain: 0...chartYMax)
                                 .chartXAxis {
                                     AxisMarks(values: .automatic(desiredCount: period.axisLabelCount)) { _ in
                                         AxisValueLabel(format: xFormat, centered: true)
@@ -151,6 +164,7 @@ struct HistoryView: View {
                                     }
                                 }
                                 .chartYAxis {
+                                    // Left: daily synthesis (mcg / IU) for the bars
                                     AxisMarks(position: .leading) { value in
                                         AxisValueLabel {
                                             if let v = value.as(Double.self) {
@@ -161,6 +175,17 @@ struct HistoryView: View {
                                         }
                                         AxisGridLine()
                                             .foregroundStyle(Color.white.opacity(0.12))
+                                    }
+                                    // Right: modelled reserve (relative %) for the trend line
+                                    AxisMarks(position: .trailing,
+                                              values: [0.0, 50, 100, 150, 200].map { trendPlotY($0) }) { value in
+                                        AxisValueLabel {
+                                            if let pos = value.as(Double.self), chartYMax > 0 {
+                                                Text("\(Int((pos / chartYMax) * 200))%")
+                                                    .font(.system(size: 9))
+                                                    .foregroundStyle(Color.yellow.opacity(0.55))
+                                            }
+                                        }
                                     }
                                 }
                                 .chartPlotStyle { plot in
@@ -182,7 +207,7 @@ struct HistoryView: View {
                                         Capsule()
                                             .fill(Color.yellow.opacity(0.9))
                                             .frame(width: 18, height: 2.5)
-                                        Text("Body store trend")
+                                        Text("Modelled trend")
                                     }
                                 }
                                 .font(.system(size: 11))
@@ -190,11 +215,9 @@ struct HistoryView: View {
                             }
                         }
 
-                        // MA explanation
+                        // Trend explanation (tap "Modelled trend" for the detail)
                         if !isLoading {
-                            Text("Trend line uses the 20-day half-life of 25(OH)D — rising means you're consistently building stores, falling means you need more sun.")
-                                .font(.system(size: 11))
-                                .foregroundColor(.white.opacity(0.5))
+                            GlossaryText("The [modelled trend](glossary://modelled-trend) estimates your relative body-store reserve, where 100% is a sustained daily-goal habit. Rising means you're building; falling means you're not keeping up. It's a modelled trend, not a blood level.", size: 11, opacity: 0.5)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 28)
                         }
@@ -213,6 +236,7 @@ struct HistoryView: View {
             }
             .preferredColorScheme(.dark)
         }
+        .glossaryTaps()
         .onAppear { loadData() }
         .onChange(of: period) { loadData() }
     }
@@ -251,39 +275,55 @@ struct HistoryView: View {
             self.bars = Array(allBars.suffix(period.displayDays))
 
             // Compute MA across ALL fetched days, then take the same suffix
-            let allMA = Self.halfLifeWMA(allBars: allBars, halfLifeDays: Double(halfLifeDays))
+            let allMA = Self.bodyStoreReserve(allBars: allBars, halfLifeDays: Double(halfLifeDays))
             self.maPoints = Array(allMA.suffix(period.displayDays))
 
             self.isLoading = false
         }
     }
 
-    // MARK: Half-life weighted moving average
+    // MARK: Modelled body-store trend (saturating one-compartment reservoir)
     //
-    // For each day i the weighted average is:
-    //   WMA(i) = Σ_{k=0}^{K} ( iu[i-k] × decay^k ) / Σ_{k=0}^{K} decay^k
-    // where decay = 2^(−1/halfLife) ≈ 0.9659 for halfLife = 20 days.
+    // The daily bars are synthesis; this line models the RESERVE they build.
+    // Vitamin D's storage form, 25(OH)D, has a ~2–3 week half-life, so intake
+    // accumulates and clears exponentially — the standard one-compartment
+    // pharmacokinetic model:  store += intake;  store *= decay each day.
     //
-    // Rising = you are outpacing decay (building stores).
-    // Falling = you are not getting enough sun to maintain levels.
-    static func halfLifeWMA(allBars: [Bar], halfLifeDays: Double) -> [MAPoint] {
+    // A saturating term reflects the documented curvilinear response: each extra
+    // dose raises the store less as it fills (per-µg response roughly halves
+    // from 1000→4000 IU/d; the serum curve plateaus). Without it a linear
+    // reservoir would over-state gains at high stores.
+    //
+    // Reported as a RELATIVE reserve where 100% is the level a sustained
+    // daily-goal habit maintains — NOT a blood level. Estimated cutaneous
+    // synthesis (mcg) is not calibrated to serum 25(OH)D (nmol/L), so only the
+    // trend's direction and relative height are meaningful.
+    //
+    // Earlier versions plotted a normalized weighted average, which measures
+    // your typical recent daily rate — it sits flat under steady intake and so
+    // could not show stores "building", contradicting its own caption.
+    static func bodyStoreReserve(allBars: [Bar], halfLifeDays: Double,
+                                 dailyGoalIU: Double = 4000) -> [MAPoint] {
         let decay = pow(0.5, 1.0 / halfLifeDays)
+        let fullScale = 2.0 / (1.0 - decay)          // damping ceiling, in goal-days
+
+        func step(_ store: Double, _ intakeIU: Double) -> Double {
+            let dailyIndex = intakeIU / dailyGoalIU
+            let damp = 1.0 - min(0.85, store / fullScale)   // diminishing returns as it fills
+            return store * decay + dailyIndex * damp
+        }
+        // Reference (= 100%): the steady state a sustained daily-goal habit reaches.
+        var ref = 0.0
+        for _ in 0..<2000 { ref = step(ref, dailyGoalIU) }
+
         var points: [MAPoint] = []
         points.reserveCapacity(allBars.count)
-
-        for i in allBars.indices {
-            var weightedSum = 0.0
-            var totalWeight  = 0.0
-            let lookback = min(i + 1, Int(ceil(halfLifeDays * 3)))
-            for offset in 0..<lookback {
-                let w = pow(decay, Double(offset))
-                weightedSum += allBars[i - offset].iu * w
-                totalWeight  += w
-            }
-            let wma = totalWeight > 0 ? weightedSum / totalWeight : 0
-            points.append(MAPoint(date: allBars[i].date, iu: wma))
+        var store = 0.0
+        for bar in allBars {
+            store = step(store, bar.iu)
+            points.append(MAPoint(date: bar.date, iu: ref > 0 ? store / ref * 100.0 : 0))
         }
-        return points
+        return points   // MAPoint.iu now carries reserve %, not mcg
     }
 
     // MARK: Formatting
