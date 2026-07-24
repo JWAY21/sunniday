@@ -469,7 +469,7 @@ private struct ScienceContent: View {
     private var historyCard: some View {
         InfoCard(icon: "chart.bar.xaxis", title: "The history trend line") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("History shows daily synthesis as bars. The line over the top — the modelled trend — is a different thing: an estimate of the reserve those days build up, on its own relative scale (right axis).")
+                InfoText("History shows daily synthesis as bars. The line over the top is a best-guess of the reserve those days have banked — shown in the same unit as the bars, but on its own scale on the right (a reserve is much larger than a single day).")
 
                 GlossaryText("Vitamin D's storage form, [25(OH)D](glossary://25ohd), has a [half-life](glossary://half-life) of about 2–3 weeks, so what you make doesn't vanish overnight — it accumulates and clears slowly. That's the standard [one-compartment model](glossary://one-compartment): each day adds intake, and the store loses a fixed fraction:")
 
@@ -481,18 +481,14 @@ private struct ScienceContent: View {
                     .background(Color.black.opacity(0.16))
                     .cornerRadius(8)
 
-                InfoText("So a good run of days lifts the line; a lazy week lets it fall. It's shown as a relative reserve where 100% is the level a sustained daily-goal habit holds.")
-
-                InfoText("It also saturates: the real serum response is curvilinear — each extra dose raises the store less as it fills (the per-µg response roughly halves from 1,000 to 4,000 IU/day and plateaus), and higher stores clear faster. So doubling your sun doesn't double the reserve.")
+                InfoText("So a good run of days lifts the line; a lazy week lets it fall. It also saturates: the real serum response is curvilinear — each extra dose raises the store less as it fills (the per-µg response roughly halves from 1,000 to 4,000 IU/day and plateaus), and higher stores clear faster. So doubling your sun doesn't double the reserve.")
 
                 VStack(alignment: .leading, spacing: 5) {
                     SpecRow(label: "Assumed 25(OH)D half-life", value: "20 days",
                             note: "Round value in the reported 2–3 week range; not personalised")
-                    SpecRow(label: "Reference (100%)", value: "sustained daily goal",
-                            note: "The store a steady daily-goal habit maintains")
                 }
 
-                Bullet("This is a modelled trend, not a blood level. The app estimates cutaneous synthesis in mcg, which is not calibrated to serum 25(OH)D (nmol/L) — only a blood test gives that. Read the direction and relative height, not the exact number.")
+                Bullet("This is a best guess, not a blood level. The app estimates cutaneous synthesis, which is not calibrated to serum 25(OH)D — only a blood test gives that. The absolute figure is indicative; read the direction it's heading, not the exact number.")
 
                 InfoText("An earlier version drew a normalized weighted average, which tracks your typical recent daily rate — it sat flat under steady sun and so couldn't show a reserve building. The reservoir model fixes that.")
             }

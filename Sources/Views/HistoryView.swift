@@ -59,7 +59,7 @@ struct HistoryView: View {
     struct MAPoint: Identifiable {
         let id = UUID()
         let date: Date
-        let iu: Double   // reserve %, relative to a sustained-goal store (not mcg)
+        let iu: Double   // modelled store, in IU (converted to mcg for display)
     }
 
     // MARK: State
@@ -72,14 +72,19 @@ struct HistoryView: View {
     private var unitLabel: String { usesMCG ? "mcg" : "IU" }
     private func convert(_ iu: Double) -> Double { usesMCG ? iu / 40.0 : iu }
 
-    // The bars' y-axis top (with headroom). The reserve trend is drawn against
-    // this same domain but on its own 0–200% scale via trendPlotY, so its
-    // movement reads clearly instead of being flattened by the tall bars.
+    // The bars' y-axis top (daily synthesis, with headroom).
     private var chartYMax: Double {
         max((bars.map { convert($0.iu) }.max() ?? 1) * 1.15, 1)
     }
-    private func trendPlotY(_ pct: Double) -> Double {
-        min(max(pct, 0), 200) / 200.0 * chartYMax
+    // The reserve line's own top (accumulated store runs much larger than a
+    // single day, so it gets its own right-hand scale, in the same unit).
+    private var trendMax: Double {
+        max((maPoints.map { convert($0.iu) }.max() ?? 1) * 1.2, 1)
+    }
+    // Draw the store against the bars' domain but scaled to its own range, so
+    // its movement is visible rather than flattened by the tall daily bars.
+    private func trendPlotY(_ storeIU: Double) -> Double {
+        min(max(convert(storeIU), 0), trendMax) / trendMax * chartYMax
     }
 
     private var average: Double {
@@ -176,12 +181,12 @@ struct HistoryView: View {
                                         AxisGridLine()
                                             .foregroundStyle(Color.white.opacity(0.12))
                                     }
-                                    // Right: modelled reserve (relative %) for the trend line
+                                    // Right: modelled reserve, in the selected unit
                                     AxisMarks(position: .trailing,
-                                              values: [0.0, 50, 100, 150, 200].map { trendPlotY($0) }) { value in
+                                              values: [0.25, 0.5, 0.75, 1.0].map { $0 * chartYMax }) { value in
                                         AxisValueLabel {
                                             if let pos = value.as(Double.self), chartYMax > 0 {
-                                                Text("\(Int((pos / chartYMax) * 200))%")
+                                                Text(formatValue((pos / chartYMax) * trendMax))
                                                     .font(.system(size: 9))
                                                     .foregroundStyle(Color.yellow.opacity(0.55))
                                             }
@@ -207,7 +212,7 @@ struct HistoryView: View {
                                         Capsule()
                                             .fill(Color.yellow.opacity(0.9))
                                             .frame(width: 18, height: 2.5)
-                                        Text("Modelled trend")
+                                        Text("Modelled reserve (right)")
                                     }
                                 }
                                 .font(.system(size: 11))
@@ -215,9 +220,9 @@ struct HistoryView: View {
                             }
                         }
 
-                        // Trend explanation (tap "Modelled trend" for the detail)
+                        // Trend explanation (tap "modelled reserve" for the detail)
                         if !isLoading {
-                            GlossaryText("The [modelled trend](glossary://modelled-trend) estimates your relative body-store reserve, where 100% is a sustained daily-goal habit. Rising means you're building; falling means you're not keeping up. It's a modelled trend, not a blood level.", size: 11, opacity: 0.5)
+                            GlossaryText("The line is a best-guess of your body's [modelled reserve](glossary://modelled-trend) — what your recent sun has banked, allowing for the slow way vitamin D clears (right axis, \(usesMCG ? "mcg" : "IU")). Rising means you're building it up; falling means you're not keeping pace. It's an estimate, not a measurement — only a blood test shows your real level.", size: 11, opacity: 0.5)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 28)
                         }
@@ -275,7 +280,7 @@ struct HistoryView: View {
             self.bars = Array(allBars.suffix(period.displayDays))
 
             // Compute MA across ALL fetched days, then take the same suffix
-            let allMA = Self.bodyStoreReserve(allBars: allBars, halfLifeDays: Double(halfLifeDays))
+            let allMA = Self.bodyStoreEstimate(allBars: allBars, halfLifeDays: Double(halfLifeDays))
             self.maPoints = Array(allMA.suffix(period.displayDays))
 
             self.isLoading = false
@@ -294,36 +299,28 @@ struct HistoryView: View {
     // from 1000→4000 IU/d; the serum curve plateaus). Without it a linear
     // reservoir would over-state gains at high stores.
     //
-    // Reported as a RELATIVE reserve where 100% is the level a sustained
-    // daily-goal habit maintains — NOT a blood level. Estimated cutaneous
-    // synthesis (mcg) is not calibrated to serum 25(OH)D (nmol/L), so only the
-    // trend's direction and relative height are meaningful.
+    // Output is the modelled store in the SAME unit as the bars (IU, converted
+    // to mcg for display) — a best-guess reserve, NOT a blood level. Estimated
+    // cutaneous synthesis isn't calibrated to serum 25(OH)D, so only the trend's
+    // shape and direction are meaningful; the absolute figure is indicative.
     //
     // Earlier versions plotted a normalized weighted average, which measures
     // your typical recent daily rate — it sits flat under steady intake and so
     // could not show stores "building", contradicting its own caption.
-    static func bodyStoreReserve(allBars: [Bar], halfLifeDays: Double,
-                                 dailyGoalIU: Double = 4000) -> [MAPoint] {
+    static func bodyStoreEstimate(allBars: [Bar], halfLifeDays: Double,
+                                  dailyGoalIU: Double = 4000) -> [MAPoint] {
         let decay = pow(0.5, 1.0 / halfLifeDays)
-        let fullScale = 2.0 / (1.0 - decay)          // damping ceiling, in goal-days
-
-        func step(_ store: Double, _ intakeIU: Double) -> Double {
-            let dailyIndex = intakeIU / dailyGoalIU
-            let damp = 1.0 - min(0.85, store / fullScale)   // diminishing returns as it fills
-            return store * decay + dailyIndex * damp
-        }
-        // Reference (= 100%): the steady state a sustained daily-goal habit reaches.
-        var ref = 0.0
-        for _ in 0..<2000 { ref = step(ref, dailyGoalIU) }
+        let fullScale = 2.0 * dailyGoalIU / (1.0 - decay)   // saturation ceiling, in IU
 
         var points: [MAPoint] = []
         points.reserveCapacity(allBars.count)
         var store = 0.0
         for bar in allBars {
-            store = step(store, bar.iu)
-            points.append(MAPoint(date: bar.date, iu: ref > 0 ? store / ref * 100.0 : 0))
+            let damp = 1.0 - min(0.85, store / fullScale)   // diminishing returns as it fills
+            store = store * decay + bar.iu * damp
+            points.append(MAPoint(date: bar.date, iu: store))   // store in IU, like the bars
         }
-        return points   // MAPoint.iu now carries reserve %, not mcg
+        return points
     }
 
     // MARK: Formatting
