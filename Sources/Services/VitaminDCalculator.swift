@@ -169,6 +169,12 @@ class VitaminDCalculator: ObservableObject {
     private var manualSessionAdjustment: Double = 0.0
     /// Ensures the approaching-burn notification fires once per session.
     private var hasWarnedApproachingBurn = false
+    /// The day's accumulated dose at the moment this session began — the point
+    /// on the shared daily curve this session starts climbing from.
+    private var sessionStartDayDose: Double = 0
+    /// Dose of a pending Log Past entry / adjusted window, committed on save.
+    private var pendingLoggedDose: Double = 0
+    private var pendingWindowDose: Double = 0
     private var lastWidgetUpdateTime: Date?
     private let widgetUpdateThrottle: TimeInterval = 60.0
     private var todaysHealthBase: Double = 0.0
@@ -315,6 +321,7 @@ class VitaminDCalculator: ObservableObject {
             cumulativeVitaminDDose = 0.0
             manualSessionAdjustment = 0.0
             hasWarnedApproachingBurn = false
+            sessionStartDayDose = todaysDose   // pick up where the day left off
             lastUpdateTime = Date()
         }
         
@@ -397,7 +404,7 @@ class VitaminDCalculator: ObservableObject {
         // accumulated so far, converted to IU/hr. As a session progresses the
         // marginal rate falls — approaching photoequilibrium.
         let medPerHour = medFractionPerMinute(uvIndex: uvIndex) * 60.0
-        currentVitaminDRate = marginalIUPerMED(atMEDFraction: cumulativeVitaminDDose)
+        currentVitaminDRate = marginalIUPerMED(atMEDFraction: todaysDose)
             * medPerHour
             * doseWeighting
             * yieldModifiers
@@ -420,8 +427,11 @@ class VitaminDCalculator: ObservableObject {
         if uvIndex > 0 {
             let deltaMED = medFractionPerMinute(uvIndex: uvIndex) * (elapsed / 60.0)
             cumulativeMEDFraction += deltaMED
-            // Weight this increment by the conditions during it, then bank it.
-            cumulativeVitaminDDose += deltaMED * doseWeighting
+            // Weight this increment by the conditions during it, then bank it
+            // into both the session and the shared daily accumulator.
+            let deltaDose = deltaMED * doseWeighting
+            cumulativeVitaminDDose += deltaDose
+            todaysDose += deltaDose
             checkBurnWarning()
         }
 
@@ -437,8 +447,9 @@ class VitaminDCalculator: ObservableObject {
         // Recompute from the dose rather than integrating a rate — this is what
         // makes synthesis saturate toward photoequilibrium instead of climbing
         // linearly for as long as the session runs.
-        sessionVitaminD = synthesisedIU(atMEDFraction: cumulativeVitaminDDose)
-            * yieldModifiers
+        sessionVitaminD = incrementIU(from: sessionStartDayDose,
+                                     to: todaysDose,
+                                     modifiers: yieldModifiers)
             + manualSessionAdjustment
 
         // Save session state every 10 seconds
@@ -492,6 +503,7 @@ class VitaminDCalculator: ObservableObject {
         // derives synthesis from the accumulated dose) doesn't discard it.
         manualSessionAdjustment += amount
         sessionVitaminD += amount
+        commitLoggedDose()
         
         // Update widget data to reflect the new total
         updateWidgetData(force: true)
@@ -512,11 +524,28 @@ class VitaminDCalculator: ObservableObject {
             * currentUVQualityFactor
             * sunscreenLevel.uvTransmissionFactor
 
-        // No skin-pigment term — MED already encodes phototype (see yieldModifiers)
-        return synthesisedIU(atMEDFraction: effectiveDose)
-            * clothingLevel.exposureFactor
-            * ageFactor
-            * currentAdaptationFactor
+        // No skin-pigment term — MED already encodes phototype (see yieldModifiers).
+        // Sits on top of the day's dose so a logged session earns the flatter
+        // part of the shared daily curve, exactly like a live one.
+        pendingLoggedDose = effectiveDose
+        let modifiers = clothingLevel.exposureFactor * ageFactor * currentAdaptationFactor
+        return incrementIU(from: todaysDose,
+                           to: todaysDose + effectiveDose,
+                           modifiers: modifiers)
+    }
+
+    /// Commit a Log Past entry's dose into the day once it's actually saved.
+    func commitLoggedDose() {
+        todaysDose += pendingLoggedDose
+        pendingLoggedDose = 0
+    }
+
+    /// Commit an adjusted session window, replacing this session's contribution
+    /// to the day rather than adding to it.
+    func commitAdjustedSessionWindow() {
+        guard pendingWindowDose > 0 else { return }
+        todaysDose = sessionStartDayDose + pendingWindowDose
+        pendingWindowDose = 0
     }
     
     private func checkHealthKitSkinType() {
@@ -635,6 +664,40 @@ class VitaminDCalculator: ObservableObject {
         clothingLevel.exposureFactor * ageFactor * currentAdaptationFactor
     }
 
+    // MARK: - Daily dose: the plateau belongs to the day, not the session
+    //
+    // Photoequilibrium is a property of your skin over a day — the 7-DHC pool
+    // and its ceiling don't reset because you came inside for lunch. So the
+    // saturating curve is shared across every session in a day: a later session
+    // starts where the earlier one left off and earns the flatter part of the
+    // curve. Without this, three 1-MED sessions would yield 45,111 IU against
+    // 23,418 IU for the same dose taken in one stretch — and would sail past
+    // D_max, contradicting the whole "sunlight can't overdose you" claim.
+
+    private static let dayDoseKey = "todaysVitaminDDose"
+    private static let dayDoseStampKey = "todaysVitaminDDoseDate"
+
+    /// Cumulative vitamin-D-weighted dose accrued today. Resets at local
+    /// midnight (a simplification — real recovery is gradual over ~a day).
+    var todaysDose: Double {
+        get {
+            let d = UserDefaults.standard
+            guard let stamp = d.object(forKey: Self.dayDoseStampKey) as? Date,
+                  Calendar.current.isDateInToday(stamp) else { return 0 }
+            return d.double(forKey: Self.dayDoseKey)
+        }
+        set {
+            let d = UserDefaults.standard
+            d.set(max(0, newValue), forKey: Self.dayDoseKey)
+            d.set(Date(), forKey: Self.dayDoseStampKey)
+        }
+    }
+
+    /// Synthesis earned by moving along the shared daily curve from `d0` to `d1`.
+    private func incrementIU(from d0: Double, to d1: Double, modifiers: Double) -> Double {
+        max(0, synthesisedIU(atMEDFraction: d1) - synthesisedIU(atMEDFraction: d0)) * modifiers
+    }
+
     /// Re-integrate synthesised vitamin D (IU) over an arbitrary window earlier
     /// today, using that day's cached hourly UV and the solar-elevation
     /// weighting — the same kinetics a live session uses.
@@ -675,7 +738,12 @@ class VitaminDCalculator: ObservableObject {
                 .map { vitaminDQualityFactor(forElevationDegrees: $0) } ?? 1.0
             dose += (uv / medAtUV1) * quality * minutes
         }
-        return synthesisedIU(atMEDFraction: dose) * yieldModifiers
+        // Measured from where this session began on the day's curve, so an
+        // adjusted window replaces (not stacks on) its own contribution.
+        pendingWindowDose = dose
+        return incrementIU(from: sessionStartDayDose,
+                           to: sessionStartDayDose + dose,
+                           modifiers: yieldModifiers)
     }
 
     /// MED fraction accrued per minute of exposure at a given UV.
@@ -892,6 +960,7 @@ class VitaminDCalculator: ObservableObject {
             UserDefaults.standard.removeObject(forKey: "activeSessionVitaminD")
             UserDefaults.standard.removeObject(forKey: "activeSessionMED")
             UserDefaults.standard.removeObject(forKey: "activeSessionVitDDose")
+            UserDefaults.standard.removeObject(forKey: "activeSessionStartDayDose")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUV")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUpdate")
             return
@@ -902,6 +971,7 @@ class VitaminDCalculator: ObservableObject {
         UserDefaults.standard.set(sessionVitaminD, forKey: "activeSessionVitaminD")
         UserDefaults.standard.set(cumulativeMEDFraction, forKey: "activeSessionMED")
         UserDefaults.standard.set(cumulativeVitaminDDose, forKey: "activeSessionVitDDose")
+        UserDefaults.standard.set(sessionStartDayDose, forKey: "activeSessionStartDayDose")
         UserDefaults.standard.set(lastUV, forKey: "activeSessionLastUV")
         UserDefaults.standard.set(lastUpdateTime, forKey: "activeSessionLastUpdate")
     }
@@ -920,6 +990,7 @@ class VitaminDCalculator: ObservableObject {
             UserDefaults.standard.removeObject(forKey: "activeSessionVitaminD")
             UserDefaults.standard.removeObject(forKey: "activeSessionMED")
             UserDefaults.standard.removeObject(forKey: "activeSessionVitDDose")
+            UserDefaults.standard.removeObject(forKey: "activeSessionStartDayDose")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUV")
             UserDefaults.standard.removeObject(forKey: "activeSessionLastUpdate")
             return
@@ -930,6 +1001,7 @@ class VitaminDCalculator: ObservableObject {
         sessionVitaminD = UserDefaults.standard.double(forKey: "activeSessionVitaminD")
         cumulativeMEDFraction = UserDefaults.standard.double(forKey: "activeSessionMED")
         cumulativeVitaminDDose = UserDefaults.standard.double(forKey: "activeSessionVitDDose")
+        sessionStartDayDose = UserDefaults.standard.double(forKey: "activeSessionStartDayDose")
         lastUV = UserDefaults.standard.double(forKey: "activeSessionLastUV")
         lastUpdateTime = UserDefaults.standard.object(forKey: "activeSessionLastUpdate") as? Date
         

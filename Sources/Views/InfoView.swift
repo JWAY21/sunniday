@@ -231,6 +231,10 @@ private struct ScienceContent: View {
                 InfoText("UV index never appears as its own multiplier. It only sets how fast dose accrues, so the sole non-linearity is the physiological plateau.")
 
                 InfoText("Each increment is weighted by solar elevation and sunscreen as it is banked, then the total is scaled by exposed body surface, age and adaptation.")
+
+                InfoText("The plateau belongs to the day, not the session. Photoequilibrium is a property of your skin, and it doesn't reset because you came inside for lunch — so every session in a day shares one curve. A second session starts where the first left off and earns the flatter part, giving real diminishing returns.")
+
+                InfoText("Three separate 1 MED sessions therefore yield the same as one continuous 3 MED session — about 23,400 IU, not 45,100. Splitting your sun into chunks can't beat the ceiling. The day's dose resets at midnight.")
             }
         }
     }
@@ -570,6 +574,7 @@ private struct ScienceContent: View {
                 Bullet("Individual variation in 7-DHC density, adiposity, genetics and baseline status is not represented. The adaptation factor is a heuristic, not a validated physiological term.")
                 Bullet("The age decline is contested. It follows MacLaughlin & Holick (1985), which found a more-than-twofold drop with age. But a 2024 study measuring skin 7-DHC directly found no significant difference between healthy older and younger adults, and a similar vitamin D response to UV — suggesting older adults' typically lower status may owe more to behaviour (less skin exposed, less time outdoors) than to a fixed biological ceiling. Treat the age factor as one plausible model, not settled fact.")
                 Bullet("The burn limit ignores sunscreen, so it is deliberately conservative if you are wearing any.")
+                Bullet("The saturation ceiling is shared across a day and resets at local midnight. That's a simplification: real recovery is gradual — previtamin D3 clears and the 7-DHC pool refills over roughly a day — so a session spanning midnight gets an artificial fresh start, and back-to-back days don't carry any residue.")
                 Bullet("The history trend line assumes a fixed 20-day 25(OH)D half-life for everyone; true half-life varies by person and is not personalised. It estimates a trend, not a blood level.")
             }
         }
