@@ -947,6 +947,11 @@ struct ContentView: View {
     }
 
     private func formatVitaminDNumber(_ value: Double) -> String {
+        // Low mcg values get a decimal — "1.3" is far less vague than "1" or "0"
+        // for a morning reading. Whole numbers above 100 and for IU.
+        if usesMCG && value < 100 {
+            return String(format: "%.1f", value)
+        }
         if value < 1000 {
             return "\(Int(value.rounded()))"
         } else if value < 100000 {
@@ -957,8 +962,11 @@ struct ContentView: View {
             return String(format: "%.0fK", value / 1000)
         }
     }
-    
+
     private func formatTodaysTotal(_ value: Double) -> String {
+        if usesMCG && value < 100 {
+            return String(format: "%.1f", value)
+        }
         if value < 1000 {
             return "\(Int(value))"
         } else if value < 100000 {

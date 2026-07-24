@@ -122,7 +122,7 @@ struct HistoryView: View {
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(.white.opacity(0.6))
                                 .tracking(1.2)
-                            Text(formatValue(average))
+                            Text(formatHeadline(average))
                                 .font(.system(size: 52, weight: .bold, design: .rounded))
                                 .foregroundColor(.white)
                                 .monospacedDigit()
@@ -324,6 +324,8 @@ struct HistoryView: View {
     }
 
     // MARK: Formatting
+
+    /// Axis tick labels — always whole to avoid clutter.
     private func formatValue(_ value: Double) -> String {
         if value == 0  { return "0" }
         if value < 1000 { return "\(Int(value.rounded()))" }
@@ -331,5 +333,11 @@ struct HistoryView: View {
         f.numberStyle = .decimal
         f.maximumFractionDigits = 0
         return f.string(from: NSNumber(value: value)) ?? "\(Int(value))"
+    }
+
+    /// The big headline number — 1 decimal for low mcg values, like the dashboard.
+    private func formatHeadline(_ value: Double) -> String {
+        if usesMCG && value < 100 { return String(format: "%.1f", value) }
+        return formatValue(value)
     }
 }
