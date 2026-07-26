@@ -36,7 +36,7 @@ struct InfoView: View {
                             BasicsContent()
                         }
 
-                        Text("SUNniDAY gives estimates, not measurements. It is not medical advice — talk to a doctor before changing sun habits or supplements.")
+                        Text("SUNniDAY gives estimates, not measurements. It is not medical advice. Talk to a doctor before changing sun habits or supplements.")
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.75))
                             .multilineTextAlignment(.center)
@@ -146,34 +146,34 @@ private struct BasicsContent: View {
     var body: some View {
         VStack(spacing: 16) {
             InfoCard(icon: "sun.max.fill", title: "Your skin makes it, not your gut") {
-                InfoText("Vitamin D isn't really a vitamin — it's a hormone your body builds itself. Deep in your skin sits a cholesterol-like molecule called 7-dehydrocholesterol. When a narrow band of ultraviolet light (UVB, around 295–300 nanometres) hits it, the molecule snaps into a new shape called previtamin D3, which your body then converts into the vitamin D that ends up in your blood.\n\nThat's why food and supplements are a workaround: sunlight is the route we evolved with.")
+                GlossaryText("Vitamin D isn't really a vitamin. It's a [hormone](glossary://hormone) your body builds itself. Deep in your skin sits a cholesterol-like molecule called [7-dehydrocholesterol](glossary://7-dhc). When a narrow band of ultraviolet light ([UVB](glossary://uvb), around 295\u{2013}300 nanometres) hits it, the molecule snaps into a new shape called [previtamin D3](glossary://previtamin-d3), which your body then converts into the vitamin D that ends up in your blood as [25(OH)D](glossary://25ohd), the form a blood test measures.\n\nFood and supplements are helpful but sunlight is the route we evolved with.")
             }
 
             InfoCard(icon: "shield.lefthalf.filled", title: "You can't overdose from sunlight") {
-                InfoText("Here's the elegant part. As UVB keeps hitting your skin, previtamin D3 builds up — but only to a point. At roughly 10–15% conversion it hits a balance, and any extra sunlight starts diverting it into two other molecules — lumisterol and tachysterol — instead. They make no vitamin D, and they can convert back as previtamin D3 is used up.\n\nSo your skin self-limits. Staying out twice as long doesn't give you twice the vitamin D — it plateaus. This is exactly why you can't poison yourself with sunshine, only burn.\n\nSUNniDAY models that plateau. Watch a long session: the numbers climb quickly at first, then flatten.")
+                GlossaryText("Here's the elegant part. As [UVB](glossary://uvb) keeps hitting your skin, [previtamin D3](glossary://previtamin-d3) builds up, but only to a point. At roughly 10\u{2013}15% conversion of your [7-DHC](glossary://7-dhc) it hits a balance, and any extra sunlight starts diverting previtamin D3 into two other molecules, [lumisterol](glossary://photoproducts) and [tachysterol](glossary://photoproducts), instead. They make no vitamin D, and they can convert back as previtamin D3 is used up.\n\nSo your skin self-limits. Staying out twice as long doesn't give you twice the vitamin D. It plateaus. This is exactly why you can't poison yourself with sunshine, only burn.\n\nSUNniDAY models that plateau. Watch a long session: the numbers climb quickly at first, then flatten. Sessions through the day feed the same ceiling rather than each starting fresh, and it resets at midnight, a simple stand-in for the day or so your skin takes to recover.")
             }
 
-            InfoCard(icon: "timer", title: "Why we count sunburn, not minutes") {
-                GlossaryText("\"20 minutes of sun\" means nothing on its own. Twenty minutes at midday in summer is a world away from twenty minutes at 8am in winter.\n\nSo instead of the clock, the app tracks how much of a sunburn you've earned. One full unit — an [MED, or minimal erythemal dose](glossary://med) — is the amount that would leave your skin just faintly pink the next day. It automatically accounts for how strong the sun is and how easily you burn.\n\nMost of the good vitamin D arrives well before you reach that point, which is why the burn limit is the number worth watching.")
+            InfoCard(icon: "timer", title: "Why we count fractions of a sunburn (MED), not minutes") {
+                GlossaryText("\"20 minutes of sun\" means nothing on its own. Twenty minutes at midday in summer is a world away from twenty minutes at 8am in winter.\n\nThe app tracks how much of a sunburn you've earned. One full unit, an [MED, or minimal erythemal dose](glossary://med), is the amount that would leave your skin just faintly pink the next day. You set your skin type and what you're wearing; the app pulls the UV for where you are automatically, and you can correct the cloud cover by tapping it.\n\nMost of the good vitamin D arrives well before you reach that point, which is why the burn limit is the number worth watching.")
             }
 
             InfoCard(icon: "sun.haze.fill", title: "Why midday beats morning") {
-                InfoText("When the sun is low, its light travels through far more atmosphere to reach you. The ozone up there is very good at absorbing exactly the short-wavelength UVB that makes vitamin D — while the longer wavelengths that redden and age your skin get through more easily.\n\nThe upshot: early morning and late afternoon sun can still burn you, but produce relatively little vitamin D. A rough field test is your shadow — if it's longer than you are tall, the sun is below 45° and vitamin D production is dropping away fast.\n\nThis is also why \"vitamin D winter\" is a real thing: at higher latitudes the midwinter sun never climbs high enough.")
+                GlossaryText("When the sun is low, its light travels through far more atmosphere to reach you. The ozone up there is very good at absorbing exactly the short-wavelength UVB that makes vitamin D, while the [longer wavelengths that redden and age your skin](glossary://uva) get through more easily.\n\nThe upshot: early morning and late afternoon sun can still burn you, but produce relatively little vitamin D. A rough field test is your shadow. If it's longer than you are tall, the sun is below 45\u{00B0} and vitamin D production is dropping away fast.\n\nThis is also why \"vitamin D winter\" is a real thing: at higher latitudes the midwinter sun never climbs high enough.\n\nThe app follows the sun's real angle through the day and scales your vitamin D down as it drops, to almost nothing near the horizon. That is why the same burn earns you less early and late, and why vitamin D winter falls out of the maths rather than being a rule we typed in.\n\nNone of which makes early light worthless, it just isn't doing much for vitamin D. Morning daylight is the strongest signal your body clock gets, landing on specialised cells in the retina that set your sleep timing, alertness and hormone rhythm for the rest of the day. You will also see claims that the [red and infrared](glossary://infrared) in low sun helps your mitochondria: the mechanism is real in the laboratory, but the human evidence is still thin. Vitamin D is one reason to get outside. It is not the only one.")
             }
 
             InfoCard(icon: "person.2.fill", title: "Skin tone changes the clock, not the ceiling") {
-                InfoText("Melanin is natural sun protection — it absorbs UV before it reaches the vitamin-D machinery. So darker skin needs considerably longer in the sun for the same result.\n\nBut here's the subtlety: for the same amount of sunburn-equivalent exposure, people of different skin tones produce broadly similar amounts. Melanin changes how long it takes to get there, not how much you can ultimately make. Because the app already measures your dose in sunburn units, your skin type is built in.")
+                GlossaryText("[Melanin](glossary://melanin) is natural sun protection. It absorbs UV before it reaches the vitamin-D machinery, so darker skin needs considerably longer in the sun for the same level of vitamin D synthesis.\n\nFor the same amount of sunburn-equivalent exposure (MED), people of different skin tones produce broadly similar amounts. Melanin changes how long it takes to get there, not how much you can ultimately make. Because the app already measures your dose in sunburn units, your skin type is built in.")
             }
 
             InfoCard(icon: "questionmark.circle.fill", title: "What we're assuming") {
                 VStack(alignment: .leading, spacing: 7) {
                     InfoText("This is a model, not a measurement. Nothing is reading your actual blood levels. In particular:")
-                    Bullet("UV comes from a weather forecast for your area — not a sensor on you. Shade, trees and buildings aren't known.")
+                    Bullet("UV comes from a weather forecast for your area, not a sensor on you. Shade, trees and buildings aren't known.")
                     Bullet("We assume the listed clothing genuinely exposes that share of your skin.")
                     Bullet("Sunscreen is assumed to be applied properly. Almost nobody applies enough, so real protection is usually lower than the label.")
-                    Bullet("Glass blocks UVB. Sun through a window makes essentially no vitamin D, and the app can't tell.")
+                    Bullet("Glass blocks UVB while letting UVA through. Sun through a window makes essentially no vitamin D, but the UVA still reaches you and still ages and damages skin.")
                     Bullet("Water, sand and snow bounce extra UV onto you. Not modelled.")
-                    Bullet("People vary — genetics, weight and age all shift how much you actually make.")
+                    Bullet("People vary. Genetics, weight and age all shift how much you actually make.")
                     InfoText("Treat the numbers as a well-informed ballpark. Switch to \"The Science\" tab for the equation, the evidence and the full list of limitations.")
                 }
             }
@@ -209,9 +209,9 @@ private struct ScienceContent: View {
     private var modelCard: some View {
         InfoCard(icon: "function", title: "The model") {
             VStack(alignment: .leading, spacing: 10) {
-                GlossaryText("Dose is expressed as a fraction of an [MED](glossary://med) — the same unit the photobiology literature uses — and synthesis saturates rather than accumulating linearly:")
+                GlossaryText("Dose is expressed as a fraction of an [MED](glossary://med), the same unit the photobiology literature uses, and synthesis saturates rather than accumulating linearly:")
 
-                Text("D(m) = D_max × (1 − e^(−k·m))")
+                Text("D(m) = D_max \u{00D7} (1 \u{2212} e^(\u{2212}k\u{00B7}m))")
                     .font(.system(size: 15, weight: .semibold, design: .monospaced))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -220,26 +220,30 @@ private struct ScienceContent: View {
                     .cornerRadius(8)
 
                 VStack(alignment: .leading, spacing: 5) {
+                    SpecRow(label: "D(m)", value: "IU",
+                            note: "What you get: whole-body vitamin D at dose m, before body-surface and physiological modifiers")
                     SpecRow(label: "D_max", value: "\(Int(dmax).formatted()) IU",
-                            note: "Whole-body asymptote")
-                    SpecRow(label: "k", value: String(format: "%.2f", k),
-                            note: "Saturation rate")
+                            note: "The ceiling. However long you stay out, one day cannot exceed this")
                     SpecRow(label: "m", value: "MED fraction",
-                            note: "Vitamin-D-weighted dose accumulated")
+                            note: "Dose so far today, in sunburn units, weighted for how vitamin-D-effective that UV was")
+                    SpecRow(label: "k", value: String(format: "%.2f", k),
+                            note: "How fast you approach the ceiling. Higher means you saturate sooner")
+                    SpecRow(label: "e", value: "2.718…",
+                            note: "Base of natural logarithms, which is what makes the curve bend rather than climb straight")
                 }
 
-                InfoText("UV index never appears as its own multiplier. It only sets how fast dose accrues, so the sole non-linearity is the physiological plateau.")
+                InfoText("Read plainly: start at zero, climb steeply, then flatten toward D_max as m grows. UV index never appears as its own multiplier. It only sets how fast dose accrues, so the sole non-linearity is the physiological plateau.")
 
                 InfoText("Each increment is weighted by solar elevation and sunscreen as it is banked, then the total is scaled by exposed body surface, age and adaptation.")
 
-                InfoText("The plateau belongs to the day, not the session. Photoequilibrium is a property of your skin, and it doesn't reset because you came inside for lunch — so every session in a day shares one curve. A second session starts where the first left off and earns the flatter part, giving real diminishing returns.")
+                GlossaryText("The plateau belongs to the day, not the session. [Photoequilibrium](glossary://photoequilibrium) is a property of your skin, and it doesn't reset because you came inside for lunch, so every session in a day shares one curve. A second session starts where the first left off and earns the flatter part, giving real diminishing returns.")
 
-                InfoText("Three separate 1 MED sessions therefore yield the same as one continuous 3 MED session — about 23,400 IU, not 45,100. Splitting your sun into chunks can't beat the ceiling. The day's dose resets at midnight.")
+                InfoText("The real recovery has no clean finish line. Previtamin D3 keeps converting to vitamin D3 for a day or more after you come inside; the lumisterol and tachysterol sitting in the overflow drift back as previtamin D3 is drawn off; and your skin manufactures fresh 7-DHC continuously the whole time. These overlap, and no published figure pins down when the pool is truly restored.")
+
+                InfoText("Three separate 1 MED sessions therefore yield the same as one continuous 3 MED session: about 23,400 IU, not 45,100. Splitting your sun into chunks can't beat the ceiling. The app resets the day's dose at midnight, which is a simplification chosen for clarity rather than a claim about your skin.")
             }
         }
     }
-
-    // MARK: Saturation curve
 
     private var saturationData: [(m: Double, iu: Double)] {
         stride(from: 0.0, through: 3.0, by: 0.02).map {
@@ -250,7 +254,7 @@ private struct ScienceContent: View {
     private var saturationCard: some View {
         InfoCard(icon: "chart.line.uptrend.xyaxis", title: "Saturation curve") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("Whole-body synthesis against dose. It flattens because previtamin D3 reaches photoequilibrium — further UV diverts it to lumisterol3 and tachysterol3 rather than more vitamin D.")
+                GlossaryText("Whole-body synthesis against dose. It flattens because previtamin D3 reaches [photoequilibrium](glossary://photoequilibrium), and further UV diverts it to lumisterol3 and tachysterol3 rather than making more vitamin D.")
 
                 Chart {
                     ForEach(saturationData, id: \.m) { p in
@@ -293,7 +297,7 @@ private struct ScienceContent: View {
     private var calibrationCard: some View {
         InfoCard(icon: "scalemass.fill", title: "Calibration & anchors") {
             VStack(alignment: .leading, spacing: 8) {
-                InfoText("Holick's figures derive from fluorescent-lamp studies, and solar UV is roughly 1.32× more previtamin-D-effective per unit erythemal dose. We scale by a deliberately conservative 1.25, giving D_max = 20,000 × 1.25.")
+                GlossaryText("[Holick](glossary://holick)'s figures derive from fluorescent-lamp studies, and solar UV is roughly 1.32\u{00D7} more previtamin-D-effective per unit [erythemal](glossary://erythema) dose. We scale by a deliberately conservative 1.25, giving D_max = 20,000 \u{00D7} 1.25.")
 
                 Divider().overlay(Color.white.opacity(0.25))
 
@@ -309,7 +313,7 @@ private struct ScienceContent: View {
 
                 Divider().overlay(Color.white.opacity(0.25))
 
-                InfoText("That one two-parameter curve reproduces Holick's rule, his per-MED figure and the photoequilibrium plateau simultaneously — which is the main reason to believe the shape.")
+                InfoText("The curve has only two free numbers, D_max and k, yet it lands on three independent figures at once. Holick's rule puts a quarter of an MED over a quarter of the body at about 1,000 IU. The wider literature puts one whole-body MED at 10,000 to 25,000. And the photochemistry caps any single day near the plateau. A two-parameter curve with the wrong shape would normally match one of those and miss the others, so hitting all three is the real reason to trust it.")
             }
         }
     }
@@ -325,7 +329,7 @@ private struct ScienceContent: View {
     private var elevationCard: some View {
         InfoCard(icon: "angle", title: "Solar elevation weighting") {
             VStack(alignment: .leading, spacing: 10) {
-                GlossaryText("[MED](glossary://med) is erythemally weighted, but the vitamin D [action spectrum](glossary://action-spectrum) sits further into the UVB. At low sun the longer atmospheric path strips the short UVB that drives synthesis while leaving the wavelengths that drive erythema — so an MED earned at 8am yields far less vitamin D than one earned at noon.")
+                GlossaryText("[MED](glossary://med) is erythemally weighted, but the vitamin D [action spectrum](glossary://action-spectrum) sits further into the UVB. At low sun angles, the longer atmospheric path strips the short UVB that drives synthesis while leaving the wavelengths that drive [erythema](glossary://erythema), so an MED earned at 8am yields far less vitamin D than one earned at noon.")
 
                 Text("quality = min(1, (sin θ ÷ sin 50°)^1.5)")
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
@@ -334,6 +338,19 @@ private struct ScienceContent: View {
                     .padding(.vertical, 7)
                     .background(Color.black.opacity(0.16))
                     .cornerRadius(8)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    SpecRow(label: "quality", value: "0 to 1",
+                            note: "The multiplier applied to each dose increment as it is banked")
+                    SpecRow(label: "\u{03B8}", value: "sun angle",
+                            note: "How high the sun sits above the horizon at that moment")
+                    SpecRow(label: "sin 50\u{00B0}", value: "reference",
+                            note: "At 50\u{00B0} or higher the sun earns full credit")
+                    SpecRow(label: "^1.5", value: "falloff",
+                            note: "How sharply yield drops as the sun gets lower. The uncertain one")
+                    SpecRow(label: "min(1, \u{2026})", value: "cap",
+                            note: "Stops very high sun from scoring above full credit")
+                }
 
                 Chart {
                     ForEach(elevationData, id: \.elev) { p in
@@ -367,7 +384,7 @@ private struct ScienceContent: View {
                 } }
                 .frame(height: 160)
 
-                InfoText("The 1.5 exponent is an engineering approximation of the action-spectrum ratio, not a measured constant — it is the least certain number in the model.")
+                InfoText("The 1.5 exponent is an engineering approximation of the action-spectrum ratio, not a measured constant. It is the least certain number in the model.")
             }
         }
     }
@@ -404,7 +421,7 @@ private struct ScienceContent: View {
         if !todayPoints.isEmpty {
             InfoCard(icon: "clock.fill", title: "Today, where you are") {
                 VStack(alignment: .leading, spacing: 10) {
-                    InfoText("The same curve applied to today's sun at your location. Solar noon is taken as the midpoint of sunrise and sunset, which corrects for daylight saving, your longitude within the timezone, and the equation of time in one step.")
+                    InfoText("The same curve applied to today's sun at your location. Solar noon is taken as the midpoint of sunrise and sunset rather than read off the clock. That one step quietly handles three things at once: daylight saving, the fact that you sit east or west of your timezone's centre, and the sun's own seasonal drift, which runs up to about a quarter of an hour either way.")
 
                     Chart {
                         ForEach(todayPoints) { p in
@@ -469,9 +486,9 @@ private struct ScienceContent: View {
     private var historyCard: some View {
         InfoCard(icon: "chart.bar.xaxis", title: "The history trend line") {
             VStack(alignment: .leading, spacing: 10) {
-                InfoText("History shows daily synthesis as bars. The line over the top is a best-guess of the reserve those days have banked — shown in the same unit as the bars, but on its own scale on the right (a reserve is much larger than a single day).")
+                InfoText("History shows daily synthesis as bars. The line over the top is a best-guess of the reserve those days have banked, shown in the same unit as the bars but on its own scale on the right, because a reserve is much larger than a single day.")
 
-                GlossaryText("Vitamin D's storage form, [25(OH)D](glossary://25ohd), has a [half-life](glossary://half-life) of about 2–3 weeks, so what you make doesn't vanish overnight — it accumulates and clears slowly. That's the standard [one-compartment model](glossary://one-compartment): each day adds intake, and the store loses a fixed fraction:")
+                GlossaryText("Vitamin D's storage form, [25(OH)D](glossary://25ohd), has a [half-life](glossary://half-life) of about 2–3 weeks, so what you make doesn't vanish overnight. It accumulates and clears slowly. That's the standard [one-compartment model](glossary://one-compartment): each day adds intake, and the store loses a fixed fraction:")
 
                 Text("store → store × 0.966 + today's intake")
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
@@ -481,16 +498,15 @@ private struct ScienceContent: View {
                     .background(Color.black.opacity(0.16))
                     .cornerRadius(8)
 
-                InfoText("So a good run of days lifts the line; a lazy week lets it fall. It also saturates: the real serum response is curvilinear — each extra dose raises the store less as it fills (the per-µg response roughly halves from 1,000 to 4,000 IU/day and plateaus), and higher stores clear faster. So doubling your sun doesn't double the reserve.")
+                InfoText("So a good run of days lifts the line; a lazy week lets it fall. It also saturates, because the real blood response curves rather than climbing straight. The fuller the reserve, the less each extra day adds: in supplement trials, going from 1,000 to 4,000 IU a day lifts blood levels by only about half as much per unit, and it flattens further from there. Fuller stores also clear faster. So doubling your sun doesn't double your reserve.")
 
                 VStack(alignment: .leading, spacing: 5) {
                     SpecRow(label: "Assumed 25(OH)D half-life", value: "20 days",
                             note: "Round value in the reported 2–3 week range; not personalised")
                 }
 
-                Bullet("This is a best guess, not a blood level. The app estimates cutaneous synthesis, which is not calibrated to serum 25(OH)D — only a blood test gives that. The absolute figure is indicative; read the direction it's heading, not the exact number.")
+                Bullet("This is a best guess, not a blood level. The app estimates cutaneous synthesis, which is not calibrated to serum 25(OH)D. Only a blood test gives that. The absolute figure is indicative; read the direction it's heading, not the exact number.")
 
-                InfoText("An earlier version drew a normalized weighted average, which tracks your typical recent daily rate — it sat flat under steady sun and so couldn't show a reserve building. The reservoir model fixes that.")
             }
         }
     }
@@ -522,7 +538,7 @@ private struct ScienceContent: View {
                                     value: "\(Int(VitaminDCalculator.medMinutesAtUV1[s.rawValue] ?? 0)) min")
                         }
                     }
-                    InfoText("Scaled by UV: at UV 5 these are five times faster. No separate pigment multiplier is applied — see limitations.")
+                    InfoText("Scaled by UV: at UV 5 these are five times faster. No separate pigment multiplier is applied, see limitations.")
                 }
 
                 Divider().overlay(Color.white.opacity(0.25))
@@ -545,7 +561,7 @@ private struct ScienceContent: View {
                     Text("Age")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white.opacity(0.85))
-                    InfoText("Modelled as full capacity to age 20, then declining 1.5% a year to a floor of 25% at age 70. Applied only when age is available from Health.\n\nThis one is contested — see limitations.")
+                    InfoText("Modelled as full capacity to age 20, then declining 1.5% a year to a floor of 25% at age 70. Applied only when age is available from Health.\n\nThis one is contested, see limitations.")
                 }
             }
         }
@@ -559,19 +575,19 @@ private struct ScienceContent: View {
                 Bullet("Every figure is modelled, never measured. No sensor observes your skin and nothing here reflects serum 25(OH)D.")
                 Bullet("UV is a gridded forecast (Open-Meteo) for your coordinates, not a local reading. Shade, cloud breaks, buildings and tree cover are invisible to it.")
                 Bullet("Manually overriding cloud cover replaces the forecast with your judgement, and scales the estimate accordingly.")
-                Bullet("The 1.5 elevation exponent approximates the erythemal→previtamin-D action-spectrum ratio. The action spectrum itself was still under formal revision as of 2023.")
+                Bullet("The 1.5 elevation exponent approximates the erythemal to previtamin-D action-spectrum ratio. The action spectrum itself was still under formal revision as of 2023.")
                 Bullet("Per-MED synthesis is treated as independent of skin pigmentation. MED already encodes phototype, so applying a pigment multiplier as well would double-count melanin. This follows Holick 1981, but it is a modelling choice.")
-                Bullet("D_max = 25,000 IU sits mid-range in a literature spread of 10,000–25,000 that traces largely to one group's lamp-based work, and the underlying rule has a documented methodological critique.")
+                Bullet("D_max = (20,000 IU \u{00D7} 1.25) sits mid-range in a literature spread of 10,000\u{2013}25,000 that traces largely to one group's lamp-based work, and the underlying rule has a documented methodological critique.")
                 Bullet("Body surface is treated as a linear scalar and assumes the stated clothing genuinely exposes that fraction.")
-                Bullet("Sunscreen assumes laboratory-standard application (2 mg/cm²). Typical real-world application is far thinner, so actual protection is usually lower — meaning true synthesis is likely higher than shown.")
-                Bullet("Glass transmits UVA but blocks UVB. Sun through a window produces almost no vitamin D and the app cannot detect it.")
-                Bullet("Reflective surfaces — snow, water, sand, concrete — add UV that is not modelled.")
+                Bullet("Sunscreen assumes laboratory-standard application (2 mg/cm\u{00B2}). Typical real-world application is far thinner, so actual protection is usually lower, meaning true synthesis is likely higher than shown.")
+                Bullet("Glass transmits UVA but blocks UVB. Sun through a window produces almost no vitamin D.")
+                Bullet("Reflective surfaces such as snow, water, sand and concrete add UV that is not modelled.")
                 Bullet("Altitude is passed to the forecast but no additional multiplier is applied, to avoid double-counting.")
                 Bullet("Individual variation in 7-DHC density, adiposity, genetics and baseline status is not represented. The adaptation factor is a heuristic, not a validated physiological term.")
-                Bullet("The age decline is contested. It follows MacLaughlin & Holick (1985), which found a more-than-twofold drop with age. But a 2024 study measuring skin 7-DHC directly found no significant difference between healthy older and younger adults, and a similar vitamin D response to UV — suggesting older adults' typically lower status may owe more to behaviour (less skin exposed, less time outdoors) than to a fixed biological ceiling. Treat the age factor as one plausible model, not settled fact.")
+                Bullet("The age decline is contested. It follows MacLaughlin & Holick (1985), which found a more-than-twofold drop with age. But a 2024 study measuring skin 7-DHC directly found no significant difference between healthy older and younger adults, and a similar vitamin D response to UV, suggesting older adults' typically lower status may owe more to behaviour (less skin exposed, less time outdoors) than to a fixed biological ceiling. Treat the age factor as one plausible model, not settled fact.")
                 Bullet("The burn limit ignores sunscreen, so it is deliberately conservative if you are wearing any.")
-                Bullet("The saturation ceiling is shared across a day and resets at local midnight. That's a simplification: real recovery is gradual — previtamin D3 clears and the 7-DHC pool refills over roughly a day — so a session spanning midnight gets an artificial fresh start, and back-to-back days don't carry any residue.")
-                Bullet("The history trend line is a relative modelled reserve, not a blood level — synthesised mcg isn't calibrated to serum nmol/L. It assumes a fixed 20-day half-life for everyone and a generic saturation; a real body has fat stores, protein binding, faster clearance at high levels and feedback that it doesn't capture.")
+                Bullet("The saturation ceiling is shared across a day and resets at local midnight. Real recovery is gradual rather than instant, so that boundary is arbitrary: sun late one evening and again early the next morning counts as two fresh starts even though your skin has had only a few hours, and several heavy days in a row carry no residue forward.")
+                Bullet("The history trend line is a relative modelled reserve, not a blood level. Synthesised mcg isn't calibrated to serum nmol/L. It assumes a fixed 20-day half-life for everyone and a generic saturation, whereas a real body has fat stores, protein binding, faster clearance at high levels and feedback that it doesn't capture.")
             }
         }
     }
@@ -582,34 +598,34 @@ private struct ScienceContent: View {
         InfoCard(icon: "book.fill", title: "References") {
             VStack(alignment: .leading, spacing: 11) {
                 RefLink(title: "Holick MF et al. (1981)",
-                        detail: "Regulation of cutaneous previtamin D3 photosynthesis in man: skin pigment is not an essential regulator. Science 211:590–3. — photoequilibrium plateau; basis for saturation and for omitting a pigment multiplier.",
+                        detail: "Regulation of cutaneous previtamin D3 photosynthesis in man: skin pigment is not an essential regulator. Science 211:590–3. Photoequilibrium plateau; the basis for saturation and for omitting a pigment multiplier.",
                         url: "https://www.science.org/doi/10.1126/science.6256855")
                 RefLink(title: "MacLaughlin JA, Anderson RR, Holick MF (1982)",
-                        detail: "Spectral character of sunlight modulates photosynthesis of previtamin D3 and its photoisomers in human skin. Science 216:1001–3. — action spectrum; optimum 295–300 nm.",
+                        detail: "Spectral character of sunlight modulates photosynthesis of previtamin D3 and its photoisomers in human skin. Science 216:1001–3. Action spectrum; optimum 295–300 nm.",
                         url: "https://www.science.org/doi/10.1126/science.6281884")
                 RefLink(title: "Young AR et al. (2021)",
-                        detail: "A revised action spectrum for vitamin D synthesis by suberythemal UV radiation exposure in humans in vivo. PNAS 118(40). — in vivo, n=75; finds erythemally-weighted dose is a poor predictor of synthesis; proposes a 5 nm shift. Basis for elevation weighting.",
+                        detail: "A revised action spectrum for vitamin D synthesis by suberythemal UV radiation exposure in humans in vivo. PNAS 118(40). In vivo, n=75; finds erythemally-weighted dose is a poor predictor of synthesis, and proposes a 5 nm shift. The basis for elevation weighting.",
                         url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8501902/")
                 RefLink(title: "Holick's rule and vitamin D from sunlight",
-                        detail: "Notes the rule derives from a fluorescent-lamp spectrum; solar UV is ~1.32× more previtamin-D-effective per erythemal unit. Basis for the 1.25 calibration.",
+                        detail: "Notes the rule derives from a fluorescent-lamp spectrum; solar UV is about 1.32× more previtamin-D-effective per erythemal unit. The basis for the 1.25 calibration.",
                         url: "https://www.sciencedirect.com/science/article/abs/pii/S0960076010001925")
                 RefLink(title: "MacLaughlin JA, Holick MF (1985)",
-                        detail: "Aging decreases the capacity of human skin to produce vitamin D3. J Clin Invest 76(4):1536–8. — the original basis for this app's age-decline factor.",
+                        detail: "Aging decreases the capacity of human skin to produce vitamin D3. J Clin Invest 76(4):1536–8. The original basis for this app's age-decline factor.",
                         url: "https://www.jci.org/articles/view/112134")
                 RefLink(title: "Borecka O et al. (2024)",
-                        detail: "Comparative study of healthy older and younger adults shows they have the same skin concentration of 7-dehydrocholesterol and similar response to UVR. Nutrients. — found no significant age difference in skin 7-DHC or vitamin D response; the basis for treating the age factor as contested.",
+                        detail: "Comparative study of healthy older and younger adults shows they have the same skin concentration of 7-dehydrocholesterol and similar response to UVR. Nutrients. Found no significant age difference, which is why the age factor is treated as contested.",
                         url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11053405/")
                 RefLink(title: "Pope SJ et al. (2008)",
                         detail: "Action spectrum conversion factors that change erythemally weighted to previtamin D3-weighted UV doses. Photochem Photobiol 84(5).",
                         url: "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1751-1097.2008.00373.x")
                 RefLink(title: "Webb AR et al. (2023)",
-                        detail: "Previtamin D action spectrum: challenging CIE towards a standard. — the spectrum remains formally unsettled.",
+                        detail: "Previtamin D action spectrum: challenging CIE towards a standard. The spectrum remains formally unsettled.",
                         url: "https://journals.sagepub.com/doi/full/10.1177/14771535221122937")
                 RefLink(title: "Jones G (2008)",
-                        detail: "Pharmacokinetics of vitamin D toxicity. Am J Clin Nutr. — 25(OH)D3 circulating half-life ~15 days; basis for the history trend line's decay.",
+                        detail: "Pharmacokinetics of vitamin D toxicity. Am J Clin Nutr. 25(OH)D3 circulating half-life about 15 days; the basis for the history trend line's decay.",
                         url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4207933/")
                 RefLink(title: "Gallagher JC et al. (2012)",
-                        detail: "Dose-response to vitamin D supplementation in postmenopausal women. Ann Intern Med 156:425–37. — serum 25(OH)D response is curvilinear and plateaus; basis for the trend line's saturation.",
+                        detail: "Dose-response to vitamin D supplementation in postmenopausal women. Ann Intern Med 156:425–37. Serum 25(OH)D response is curvilinear and plateaus; the basis for the trend line's saturation.",
                         url: "https://www.acpjournals.org/doi/10.7326/0003-4819-156-6-201203200-00005")
                 RefLink(title: "Open-Meteo",
                         detail: "UV index, clear-sky UV, cloud cover and sun times. No API key, no tracking.",
@@ -622,7 +638,7 @@ private struct ScienceContent: View {
                         detail: "Original project.",
                         url: "https://github.com/jackjackbits/sunday")
                 RefLink(title: "github.com/JWAY21/sunniday",
-                        detail: "This fork — full source.",
+                        detail: "This fork, full source.",
                         url: "https://github.com/JWAY21/sunniday")
             }
         }
