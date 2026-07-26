@@ -34,7 +34,7 @@ struct LifecycleView: View {
                             LifecycleBasics()
                         }
 
-                        Text("Written for curiosity, not clinical use. Vitamin D supplements are genuinely valuable — especially in winter, at high latitude, for darker skin, and for anyone mostly indoors. Talk to a doctor about your own levels.")
+                        Text("Written for curiosity, not clinical use. Vitamin D supplements are genuinely valuable, especially in winter, at high latitude, for darker skin, and for anyone mostly indoors. Talk to a doctor about your own levels.")
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.8))
                             .multilineTextAlignment(.center)
@@ -183,7 +183,7 @@ private struct LifecycleBasics: View {
     var body: some View {
         VStack(spacing: 16) {
             InfoCard(icon: "sparkle.magnifyingglass", title: "A molecule's journey") {
-                LifeText("Vitamin D isn't a vitamin at all — it's a hormone, and one of the few your body can't finish building without help from the sky. Here's the whole trip, in plain language.")
+                GlossaryText("Vitamin D isn't a vitamin at all. It's a [hormone](glossary://hormone), and one of the few your body can't finish building without help from the sky. Here's the whole trip, in plain language.")
             }
 
             ForEach(BasicStep.all) { step in
@@ -191,7 +191,7 @@ private struct LifecycleBasics: View {
             }
 
             InfoCard(icon: "pills.fill", title: "So why not just take a pill?") {
-                LifeText("Supplements work — they reliably raise your levels, and matter for anyone who can't get sun. But swallowing vitamin D joins this story near the end, and skipping the first half turns out to matter.")
+                LifeText("Supplements work. They reliably raise your levels, and matter for anyone who can't get sun. But swallowing vitamin D joins this story near the end, and skipping the first half turns out to matter.")
             }
 
             ForEach(BasicContrast.all) { c in
@@ -215,33 +215,33 @@ private struct BasicStep: Identifiable {
     static let all: [BasicStep] = [
         BasicStep(icon: "arrow.branch",
                   title: "It's built from a near-miss cholesterol",
-                  body: "You'll often hear that sunlight turns cholesterol into vitamin D. It's actually made from the molecule your body uses one step before cholesterol — a not-quite-finished version your skin keeps a supply of.",
+                  body: "You'll often hear that sunlight turns cholesterol into vitamin D. It's actually made from the molecule your body uses one step before cholesterol, a not-quite-finished version your skin keeps a supply of.",
                   aside: "Which means cholesterol from food can't be turned into vitamin D. The step only runs one way."),
         BasicStep(icon: "square.stack.3d.up.fill",
                   title: "Your skin keeps a supply ready",
-                  body: "Your skin's outer layers have no blood supply of their own, so they make their own building materials. A standing pool of that precursor sits in the living layers just beneath the surface — a light-sensitive stockpile, kept in the one organ that meets the sun."),
+                  body: "Your skin's outer layers have no blood supply of their own, so they make their own building materials. A standing pool of that precursor sits in the living layers just beneath the surface: a light-sensitive stockpile, kept in the one organ that meets the sun."),
         BasicStep(icon: "sun.max.fill",
                   title: "Sunlight does the one thing you can't",
-                  body: "A particular slice of UVB light carries exactly the right energy to snap one bond in that molecule's ring, springing it open. That open ring is the whole point — it lets the molecule fold into a shape your body can read.",
+                  body: "A particular slice of UVB light carries exactly the right energy to snap one bond in that molecule's ring, springing it open. That open ring is the whole point, because it lets the molecule fold into a shape your body can read.",
                   aside: "No enzyme in your body can do this step. The energy has to arrive as light. It's the only reason sunshine matters here at all."),
         BasicStep(icon: "thermometer.medium",
                   title: "Your own body heat finishes it",
-                  body: "What sunlight makes isn't quite vitamin D yet. Over the following hours your body warmth quietly rearranges it into the real thing — no light needed.",
+                  body: "What sunlight makes isn't quite vitamin D yet. Over the following hours your body warmth quietly rearranges it into the real thing, no light needed.",
                   aside: "So you keep making vitamin D after you've come inside. The sun starts it; your warmth finishes it over the next day or two."),
         BasicStep(icon: "shield.lefthalf.filled",
                   title: "When you've had enough, it just stops",
-                  body: "Keep sitting in the sun and the process quietly plateaus. Extra sunlight starts making other molecules instead of more vitamin D.\n\nThis is why sunshine can't give you vitamin D poisoning. The chemistry itself refuses — you can still burn, but you can't overdose.",
-                  aside: "And those other molecules aren't waste. Scientists assumed for decades they did nothing; it turns out they have jobs of their own, protecting skin from damage."),
+                  body: "Keep sitting in the sun and the process quietly plateaus. Extra sunlight starts making other molecules instead of more vitamin D.\n\nThis is why sunshine can't give you vitamin D poisoning. The chemistry itself refuses. You can still burn, but you can't overdose.",
+                  aside: "And those other molecules aren't waste. Scientists assumed for decades they did nothing. It turns out they hold the excess and hand it back as room appears, and they have protective jobs of their own."),
         BasicStep(icon: "cross.case.fill",
                   title: "Your liver stores it, your kidney switches it on",
-                  body: "It travels to the liver, which converts it into the storage form that sits in your blood for weeks — that's the number a blood test reports.\n\nWhen your body actually needs it, the kidney flips it into the active form, which only lasts hours and is kept on a very tight leash.",
+                  body: "It travels to the liver, which converts it into the storage form that sits in your blood for weeks. That's the number a blood test reports.\n\nWhen your body actually needs it, the kidney flips it into the active form, which only lasts hours and is kept on a very tight leash.",
                   aside: "So \"your vitamin D level\" is really your reserve tank, not the working hormone. It's why a single sunny weekend barely moves it, but a habit over months does."),
         BasicStep(icon: "dna",
                   title: "It talks to your genes",
-                  body: "The active form slips into your cells and settles onto your DNA, turning genes up and down — calcium and bone, immune responses, how cells grow and specialise.\n\nThat's why it behaves like a hormone rather than a nutrient. It isn't fuel; it's instructions."),
+                  body: "The active form slips into your cells and settles onto your DNA, turning genes up and down: how much calcium your gut pulls out of your food and whether your bones bank it or give it back, how your immune system responds, and how cells grow and specialise.\n\nThat's why it behaves like a hormone rather than a nutrient. It isn't fuel, it's instructions."),
         BasicStep(icon: "arrow.uturn.down",
                   title: "Then it tidies up after itself",
-                  body: "Finally, the active form switches on the very enzyme that destroys it, and gets broken down and cleared. The signal stays short and self-correcting — the body never lets it shout for long.")
+                  body: "Finally, the active form switches on the very enzyme that destroys it, and gets broken down and cleared. The signal stays short and self-correcting, because the body never lets it shout for long.")
     ]
 }
 
@@ -254,7 +254,7 @@ private struct BasicContrast: Identifiable {
     static let all: [BasicContrast] = [
         BasicContrast(icon: "shield.lefthalf.filled",
                       title: "One has a brake, the other doesn't",
-                      body: "Sun stops itself. Capsules don't — which is why you can take too much vitamin D but you can't sunbathe your way to toxicity."),
+                      body: "Sun stops itself. Capsules don't, which is why you can take too much vitamin D but you can't sunbathe your way to toxicity."),
         BasicContrast(icon: "chart.line.flattrend.xyaxis",
                       title: "A trickle beats a flood",
                       body: "Skin releases vitamin D slowly over days. A capsule arrives all at once, and some gets stashed in body fat on the way past. Same molecule, very different delivery."),
@@ -263,7 +263,7 @@ private struct BasicContrast: Identifiable {
                       body: "Those extra molecules made when you've had enough sun come only from light, and they have their own protective roles. A vitamin D capsule contains exactly one of the things sunshine makes."),
         BasicContrast(icon: "heart.fill",
                       title: "And light does jobs vitamin D doesn't",
-                      body: "Sunlight also releases a compound stored in your skin that relaxes blood vessels and lowers blood pressure — an effect shown to work independently of vitamin D entirely. Add sleep timing and mood, and \"go outside\" is doing several things at once."),
+                      body: "Sunlight also releases a compound stored in your skin that relaxes blood vessels and lowers blood pressure, an effect shown to work independently of vitamin D entirely. Add sleep timing and mood, and \"go outside\" is doing several things at once."),
         BasicContrast(icon: "questionmark.circle.fill",
                       title: "The uncomfortable evidence",
                       body: "People with low vitamin D get more heart disease, diabetes and cancer. Yet big trials handing out supplements mostly failed to prevent any of it.\n\nThe leading explanation: low vitamin D may often be a sign of poor health and little time outdoors rather than the cause of it. If so, topping up the reading was never going to deliver what the sunshine was doing.")
@@ -276,7 +276,7 @@ private struct LifecycleScience: View {
     var body: some View {
         VStack(spacing: 16) {
             InfoCard(icon: "atom", title: "Secosteroid biosynthesis") {
-                GlossaryText("In plain terms: how your body makes vitamin D, switches it on, and puts it to work.\n\nVitamin D is a [secosteroid](glossary://secosteroid) — a steroid hormone with one ring cut open. What follows is its whole journey: from the raw carbon in your food, through the flash of UVB that creates it in your skin, to the two organs that activate it and the genes it finally controls.\n\nUnderlined words open a plain-language definition — tap any you don't know. There's a full glossary at the bottom too.")
+                GlossaryText("In plain terms: how your body makes vitamin D, switches it on, and puts it to work.\n\nVitamin D is a [secosteroid](glossary://secosteroid), a steroid hormone with one ring cut open. What follows is its whole journey: from the raw carbon in your food, through the flash of UVB that creates it in your skin, to the two organs that activate it and the genes it finally controls.")
             }
 
             ForEach(SciStage.all) { stage in
@@ -342,7 +342,7 @@ private struct LifecycleScience: View {
     private var photoequilibriumCard: some View {
         InfoCard(icon: "chart.xyaxis.line", title: "Photoequilibrium") {
             VStack(alignment: .leading, spacing: 10) {
-                LifeText("Previtamin D3 rises to a ceiling of roughly 10–15% of available 7-DHC. Only once it nears that ceiling does continued UVB start diverting into lumisterol3 and tachysterol3 — and as they build, previtamin D3 eases back down. Lumisterol3 becomes the dominant product.")
+                LifeText("Previtamin D3 rises to a ceiling of roughly 10–15% of available 7-DHC. Only once it nears that ceiling does continued UVB start diverting into lumisterol3 and tachysterol3, and as they build, previtamin D3 eases back down. Lumisterol3 becomes the dominant product.")
 
                 Chart(photoData) { p in
                     LineMark(x: .value("Dose", p.dose),
@@ -376,7 +376,7 @@ private struct LifecycleScience: View {
                 } }
                 .frame(height: 200)
 
-                LifeText("Schematic, drawn to the behaviour in Holick 1981 — exact proportions vary with wavelength, temperature and skin type. The ceiling on previtamin D3 is the point: it is why sunlight cannot cause vitamin D toxicity.", size: 12)
+                LifeText("Schematic, drawn to the behaviour in Holick 1981. Exact proportions vary with wavelength, temperature and skin type. The ceiling on previtamin D3 is the point: it is why sunlight cannot cause vitamin D toxicity.", size: 12)
             }
         }
     }
@@ -407,7 +407,7 @@ private struct LifecycleScience: View {
     private var isomerisationCard: some View {
         InfoCard(icon: "thermometer.medium", title: "Thermal isomerisation") {
             VStack(alignment: .leading, spacing: 10) {
-                LifeText("Previtamin D3 → vitamin D3 is driven by body temperature, not light. Because it happens inside the cell membrane, which holds the molecule in the reactive shape, it runs about ten times faster than in free solution.")
+                LifeText("Previtamin D3 to vitamin D3 is driven by body temperature, not light. Because it happens inside the cell membrane, which holds the molecule in the reactive shape, it runs about ten times faster than in free solution.")
 
                 Chart(isoData) { p in
                     LineMark(x: .value("Hours", p.hours),
@@ -477,7 +477,7 @@ private struct LifecycleScience: View {
     private var halfLifeCard: some View {
         InfoCard(icon: "hourglass", title: "How long each form lasts") {
             VStack(alignment: .leading, spacing: 10) {
-                LifeText("The three circulating forms clear at wildly different rates. Each curve shows how much of a single dose remains over time — note the time axis is logarithmic, so each big step is roughly ten times longer than the last.")
+                LifeText("The three circulating forms clear at wildly different rates. Each curve shows how much of a single dose remains over time. Note the time axis is logarithmic, so each big step is roughly ten times longer than the last.")
 
                 Chart(decayData) { p in
                     LineMark(x: .value("Time", p.hours),
@@ -518,7 +518,7 @@ private struct LifecycleScience: View {
                 } }
                 .frame(height: 190)
 
-                LifeText("The active hormone (calcitriol) is gone within a day, so the body retunes it hour to hour. The storage form (25(OH)D) has a ~3-week half-life, which is why a blood test reflects months of habit — and why the history screen's trend line weights past days by that same decay.", size: 12)
+                LifeText("The active hormone (calcitriol) is gone within a day, so the body retunes it hour to hour. The storage form (25(OH)D) has a roughly 3-week half-life, which is why a blood test reflects months of habit, and why the history screen's trend line weights past days by that same decay.", size: 12)
             }
         }
     }
@@ -537,10 +537,10 @@ private struct LifecycleScience: View {
                 LifeSpecRow(label: "1,25(OH)₂D", value: "4–15 h",
                             note: "Calcitriol · kidney and local tissues · the active hormone")
                 Divider().overlay(Color.white.opacity(0.2))
-                LifeSpecRow(label: "24,25(OH)₂D", value: "—",
-                            note: "Inactivation route → calcitroic acid → biliary excretion")
+                LifeSpecRow(label: "24,25(OH)₂D", value: "",
+                            note: "Inactivation route to calcitroic acid, then excreted in bile")
                 Divider().overlay(Color.white.opacity(0.2))
-                LifeSpecRow(label: "20S(OH)L3 · 25(OH)T3", value: "—",
+                LifeSpecRow(label: "20S(OH)L3 · 25(OH)T3", value: "",
                             note: "CYP11A1 photoproduct metabolites · skin · detected in epidermis and serum")
 
                 LifeText("Note the photoproduct metabolites at the foot of the table: they arise only from light, and have no oral equivalent.", size: 12)
@@ -553,19 +553,19 @@ private struct LifecycleScience: View {
         InfoCard(icon: "gearshape.2.fill", title: "The enzymes") {
             VStack(alignment: .leading, spacing: 8) {
                 LifeSpecRow(label: "DHCR7", value: "skin, ubiquitous",
-                            note: "7-DHC → cholesterol. The branch point; degraded when cholesterol is abundant, leaving more 7-DHC for vitamin D.")
+                            note: "7-DHC to cholesterol. The branch point; degraded when cholesterol is abundant, leaving more 7-DHC for vitamin D.")
                 Divider().overlay(Color.white.opacity(0.2))
                 LifeSpecRow(label: "CYP11A1", value: "skin",
                             note: "Hydroxylates lumisterol3 and tachysterol3 into bioactive metabolites. Also the first step of all steroidogenesis.")
                 Divider().overlay(Color.white.opacity(0.2))
                 LifeSpecRow(label: "CYP2R1", value: "liver",
-                            note: "D3 → 25(OH)D. The principal 25-hydroxylase; largely substrate-driven.")
+                            note: "D3 to 25(OH)D. The principal 25-hydroxylase; largely substrate-driven.")
                 Divider().overlay(Color.white.opacity(0.2))
                 LifeSpecRow(label: "CYP27B1", value: "kidney, immune cells",
-                            note: "25(OH)D → 1,25(OH)₂D. Tightly regulated by PTH, calcium, phosphate and FGF23.")
+                            note: "25(OH)D to 1,25(OH)₂D. Tightly regulated by PTH, calcium, phosphate and FGF23.")
                 Divider().overlay(Color.white.opacity(0.2))
                 LifeSpecRow(label: "CYP24A1", value: "kidney",
-                            note: "Inactivation. Induced by calcitriol itself — a negative feedback loop.")
+                            note: "Inactivation. Induced by calcitriol itself, forming a negative feedback loop.")
             }
         }
     }
@@ -672,30 +672,30 @@ private struct SciStage: Identifiable {
         SciStage(icon: "atom",
                  title: "Carbon arrives as acetyl-CoA",
                  molecule: "acetyl-CoA → sterol",
-                 body: "Every carbon atom in vitamin D starts on your plate. Sugars, fats and proteins from food are broken down inside your cells into [acetyl-CoA](glossary://acetyl-coa) — a tiny two-carbon unit that is metabolism's universal building block. Trace those carbons back one more step and they were carbon dioxide in the air, pulled into plants by photosynthesis before you ate them.\n\nInside the cell, about eighteen acetyl-CoA units are welded together, step by step, into one 27-carbon [sterol](glossary://sterol) — along the [mevalonate pathway](glossary://mevalonate), via squalene and lanosterol.",
-                 aside: "The rate-limiting enzyme of this pathway, HMG-CoA reductase, is the target of statin drugs."),
+                 body: "Every carbon atom in vitamin D starts on your plate. Sugars, fats and proteins from food are broken down inside your cells into [acetyl-CoA](glossary://acetyl-coa), a tiny two-carbon unit that is metabolism's universal building block. Trace those carbons back one more step and they were carbon dioxide in the air, pulled into plants by photosynthesis before you ate them.\n\nInside the cell, about eighteen acetyl-CoA units are welded together, step by step, into one 27-carbon [sterol](glossary://sterol), along the [mevalonate pathway](glossary://mevalonate), via [squalene](glossary://squalene) and [lanosterol](glossary://lanosterol).",
+                 aside: "The rate-limiting enzyme of this pathway, [HMG-CoA reductase](glossary://hmg-coa-reductase), is the target of statin drugs."),
         SciStage(icon: "arrow.branch",
                  title: "Vitamin D branches before cholesterol",
                  molecule: "7-DHC → cholesterol (DHCR7)",
-                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself — so it is made from cholesterol's immediate precursor, not from cholesterol.\n\nThe reaction runs one way only, so [dietary cholesterol](glossary://dietary-cholesterol) can't be turned back into 7-DHC. And a note on wording: the cholesterol here is the kind cells make inside themselves — [not the same thing as the \"high cholesterol\"](glossary://blood-cholesterol) a blood test reports.",
-                 aside: "The branch even self-regulates. Remember DHCR7 is the enzyme that spends 7-DHC by turning it into cholesterol. So when a cell already has plenty of cholesterol, it destroys some of its DHCR7 — and with fewer of those enzymes at work, less 7-DHC gets used up, leaving more sitting in the skin for sunlight."),
+                 body: "The pathway terminates when [DHCR7](glossary://dhcr7) converts [7-dehydrocholesterol](glossary://7-dhc) into cholesterol. Vitamin D forks off one step earlier, from 7-DHC itself, so it is made from cholesterol's immediate precursor rather than from cholesterol.\n\nThe reaction runs one way only, so [dietary cholesterol](glossary://dietary-cholesterol) can't be turned back into 7-DHC. And a note on wording: the cholesterol here is the kind cells make inside themselves, [not the same thing as the \"high cholesterol\"](glossary://blood-cholesterol) a blood test reports.",
+                 aside: "The branch even self-regulates. Remember DHCR7 is the enzyme that spends 7-DHC by turning it into cholesterol. So when a cell already has plenty of cholesterol, it destroys some of its DHCR7, and with fewer of those enzymes at work, less 7-DHC gets used up, leaving more sitting in the skin for sunlight."),
         SciStage(icon: "square.stack.3d.up.fill",
                  title: "The cutaneous 7-DHC pool",
                  molecule: "7-dehydrocholesterol",
-                 body: "Here's the piece that trips people up. All of the above happens inside cells — and your outer skin (the epidermis) has no blood vessels running through it at all. So how does it get raw materials? By diffusion: small nutrients seep upward from the blood-rich layer just below (the dermis) into the skin cells above.\n\nFrom those nutrients, the skin cells build their own [sterols](glossary://sterol) on the spot — including the 7-DHC pool — rather than importing finished cholesterol from the blood. So the stockpile sunlight works on is manufactured locally, right where the light lands. It's most concentrated in the living layers just below the surface, and it thins with age — a large part of why older skin makes less vitamin D."),
+                 body: "Here's the piece that trips people up. All of the above happens inside cells, and your outer skin (the epidermis) has no blood vessels running through it at all. So how does it get raw materials? By diffusion: small nutrients seep upward from the blood-rich layer just below (the dermis) into the skin cells above.\n\nFrom those nutrients, the skin cells build their own [sterols](glossary://sterol) on the spot, including the 7-DHC pool, rather than importing finished cholesterol from the blood. So the stockpile sunlight works on is manufactured locally, right where the light lands. It's most concentrated in the living layers just below the surface, and it thins with age, which is a large part of why older skin makes less vitamin D."),
         SciStage(icon: "sun.max.fill",
                  title: "UVB opens the B-ring",
                  molecule: "previtamin D3",
                  body: "Photons at 295–300 nm carry the precise energy to break one bond in the 7-DHC ring system, opening it to form the [secosteroid](glossary://secosteroid) [previtamin D3](glossary://previtamin-d3).\n\nNo enzyme performs this step. It is pure photochemistry, and it is the only reason sunlight is required.",
-                 aside: "This [action spectrum](glossary://action-spectrum) sits at shorter wavelengths than the one for sunburn — which is why burning is a poor proxy for vitamin D, and why this app weights dose by how high the sun sits."),
+                 aside: "This [action spectrum](glossary://action-spectrum) sits at shorter wavelengths than the one for sunburn, which is why burning is a poor proxy for vitamin D, and why this app weights dose by how high the sun sits."),
         SciStage(icon: "arrow.triangle.branch",
                  title: "The ceiling: photoequilibrium",
                  molecule: "lumisterol3 · tachysterol3",
-                 body: "Under continued sunlight, previtamin D3 stops piling up. It reaches a balance — a [photoequilibrium](glossary://photoequilibrium) — where every new molecule made is matched by one converted away into [lumisterol3 and tachysterol3](glossary://photoproducts).\n\nThat balance sits at only about 10–15% conversion. In other words: of all the 7-DHC in your skin, no more than roughly one molecule in seven is ever previtamin D3 at any one moment — the rest stays as 7-DHC or is parked in the overflow products. This hard ceiling is exactly why sunlight can't give you a toxic dose of vitamin D, only a sunburn. And it's reversible: as previtamin D3 is drawn off (next step), the overflow can flow back."),
+                 body: "Under continued sunlight, previtamin D3 stops piling up. It reaches a balance, a [photoequilibrium](glossary://photoequilibrium), where every new molecule made is matched by one converted away into [lumisterol3 and tachysterol3](glossary://photoproducts).\n\nThat balance sits at only about 10–15% conversion. In other words, of all the 7-DHC in your skin, no more than roughly one molecule in seven is ever previtamin D3 at any one moment. The rest stays as 7-DHC or is parked in the overflow products. This hard ceiling is exactly why sunlight can't give you a toxic dose of vitamin D, only a sunburn. And it's reversible: as previtamin D3 is drawn off in the next step, the overflow can flow back."),
         SciStage(icon: "thermometer.medium",
                  title: "Body heat finishes the job",
                  molecule: "vitamin D3 (cholecalciferol)",
-                 body: "The previtamin D3 that isn't diverted slowly turns into [vitamin D3](glossary://cholecalciferol) proper — an [isomerisation](glossary://isomerisation) powered by your body heat, not light.\n\nPrevitamin D3 is a floppy molecule, constantly twisting between shapes, and only one of those shapes can flip into vitamin D3. Packed into the crowded, orderly interior of a cell membrane, it's held in that productive shape much more of the time — so the conversion runs about ten times faster than it would loose in a fluid. Because it's heat-driven and unhurried, your skin keeps releasing fresh vitamin D3 for a day or more after you've come inside."),
+                 body: "The previtamin D3 that isn't diverted slowly turns into [vitamin D3](glossary://cholecalciferol) proper, an [isomerisation](glossary://isomerisation) powered by your body heat rather than light.\n\nPrevitamin D3 is a floppy molecule, constantly twisting between shapes, and only one of those shapes can flip into vitamin D3. Packed into the crowded, orderly interior of a cell membrane, it's held in that productive shape much more of the time, so the conversion runs about ten times faster than it would loose in a fluid. Because it's heat-driven and unhurried, your skin keeps releasing fresh vitamin D3 for a day or more after you've come inside."),
         SciStage(icon: "wand.and.stars",
                  title: "The photoproducts are not inert",
                  molecule: "hydroxy-lumisterol · hydroxy-tachysterol",
@@ -707,17 +707,17 @@ private struct SciStage: Identifiable {
                  body: "Vitamin D3 leaves the skin bound to [vitamin D binding protein](glossary://dbp) and travels to the liver. Because it seeps out gradually, sunlight delivers a slow, sustained release over days rather than a spike."),
         SciStage(icon: "cross.case.fill",
                  title: "Hepatic 25-hydroxylation",
-                 molecule: "25(OH)D — calcifediol",
-                 body: "In the liver, CYP2R1 adds a [hydroxyl group](glossary://hydroxylation) to make [25-hydroxyvitamin D](glossary://25ohd) — the storage and transport form, with a [half-life](glossary://half-life) of two to three weeks, and the molecule a blood test measures.\n\nThis step is largely substrate-driven, so intake and sun exposure translate fairly directly into the level in your blood."),
+                 molecule: "25(OH)D · calcifediol",
+                 body: "In the liver, CYP2R1 adds a [hydroxyl group](glossary://hydroxylation) to make [25-hydroxyvitamin D](glossary://25ohd): the storage and transport form, with a [half-life](glossary://half-life) of two to three weeks, and the molecule a blood test measures.\n\nThis step is largely substrate-driven, so intake and sun exposure translate fairly directly into the level in your blood."),
         SciStage(icon: "bolt.fill",
                  title: "Renal activation",
-                 molecule: "1,25(OH)₂D — calcitriol",
-                 body: "The kidney, via CYP27B1, adds a second hydroxyl to make [calcitriol](glossary://calcitriol), the genuinely active hormone. Unlike the liver step, this one is tightly governed — raised by [parathyroid hormone, restrained by FGF23](glossary://pth-fgf23) and by calcitriol itself.",
+                 molecule: "1,25(OH)₂D · calcitriol",
+                 body: "The kidney, via CYP27B1, adds a second hydroxyl to make [calcitriol](glossary://calcitriol), the genuinely active hormone. Unlike the liver step, this one is tightly governed: raised by [parathyroid hormone, restrained by FGF23](glossary://pth-fgf23) and by calcitriol itself.",
                  aside: "Immune cells, skin and other tissues run this step locally too, making calcitriol for their own use rather than for the bloodstream."),
         SciStage(icon: "dna",
                  title: "Gene regulation",
                  molecule: "VDR · RXR",
-                 body: "Calcitriol binds the [vitamin D receptor, which pairs with the retinoid X receptor](glossary://vdr) and settles onto specific stretches of DNA, turning genes up or down — across calcium absorption, bone remodelling, immunity and cell growth.\n\nIt is a signal, not a fuel: it issues instructions rather than being consumed."),
+                 body: "Calcitriol binds the [vitamin D receptor, which pairs with the retinoid X receptor](glossary://vdr) and settles onto specific stretches of DNA, turning genes up or down across calcium absorption, bone remodelling, immunity and cell growth.\n\nIt is a signal, not a fuel: it issues instructions rather than being consumed."),
         SciStage(icon: "arrow.uturn.down",
                  title: "Self-limiting breakdown",
                  molecule: "CYP24A1 → calcitroic acid",
@@ -734,7 +734,7 @@ private struct SciContrast: Identifiable {
     static let all: [SciContrast] = [
         SciContrast(icon: "shield.lefthalf.filled",
                     title: "A ceiling vs no limit",
-                    body: "The photostationary state caps how much the skin can make, however long you stay out. Oral intake has no such limit — which is why too much vitamin D is possible from capsules but not from sun."),
+                    body: "The photostationary state caps how much the skin can make, however long you stay out. Oral intake has no such limit, which is why too much vitamin D is possible from capsules but not from sun."),
         SciContrast(icon: "chart.line.flattrend.xyaxis",
                     title: "Different delivery",
                     body: "Skin releases vitamin D bound to its carrier protein over days. An oral dose is absorbed as a bolus, with a substantial share diverted into fat. Intermittent high-dose regimens diverge further still from any natural pattern."),
@@ -743,10 +743,10 @@ private struct SciContrast: Identifiable {
                     body: "Light also generates the lumisterol and tachysterol metabolites, with their own biological activity. A capsule delivers one molecule of the several sunlight makes."),
         SciContrast(icon: "heart.fill",
                     title: "Effects beyond vitamin D",
-                    body: "UVA — which makes no vitamin D — releases nitric oxide stored in the skin, lowering blood pressure in controlled trials, independently of vitamin D status."),
+                    body: "UVA, which makes no vitamin D at all, releases nitric oxide stored in the skin, lowering blood pressure in controlled trials independently of vitamin D status."),
         SciContrast(icon: "questionmark.circle.fill",
                     title: "The evidence gap",
-                    body: "Studies link high vitamin D to lower rates of heart disease, diabetes, cancer and early death — yet randomised supplement trials mostly fail to reproduce those benefits.\n\nThe favoured reading is that low vitamin D substantially reflects ill health and little sun rather than causing the outcomes, in which case topping up the reading was never going to reproduce the sunshine.")
+                    body: "Studies link high vitamin D to lower rates of heart disease, diabetes, cancer and early death, yet randomised supplement trials mostly fail to reproduce those benefits.\n\nThe favoured reading is that low vitamin D substantially reflects ill health and little sun rather than causing the outcomes, in which case topping up the reading was never going to reproduce the sunshine.")
     ]
 }
 
@@ -757,11 +757,11 @@ private struct SciReference: Identifiable {
     let url: String
 
     static let all: [SciReference] = [
-        SciReference(title: "Prabhu AV et al., J Biol Chem — cholesterol-mediated degradation of DHCR7",
+        SciReference(title: "Prabhu AV et al., J Biol Chem. Cholesterol-mediated degradation of DHCR7",
                      note: "DHCR7 makes cholesterol from 7-DHC; cholesterol accelerates its breakdown, raising 7-DHC and vitamin D synthesis. The branch point.",
                      url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4861412/"),
-        SciReference(title: "Zerenturk EJ et al. — DHCR7: a vital enzyme switch",
-                     note: "Review of DHCR7 governing the cholesterol / vitamin D split.",
+        SciReference(title: "Zerenturk EJ et al. DHCR7: a vital enzyme switch",
+                     note: "Review of DHCR7 governing the cholesterol and vitamin D split.",
                      url: "https://www.sciencedirect.com/science/article/abs/pii/S0163782716300340"),
         SciReference(title: "Origin of 7-dehydrocholesterol (provitamin D) in the skin",
                      note: "Cutaneous origin of the 7-DHC pool.",
@@ -769,23 +769,23 @@ private struct SciReference: Identifiable {
         SciReference(title: "MacLaughlin JA, Anderson RR, Holick MF (1982), Science 216:1001–3",
                      note: "Action spectrum for previtamin D3 photosynthesis; optimum 295–300 nm.",
                      url: "https://www.science.org/doi/10.1126/science.6281884"),
-        SciReference(title: "Tian XQ & Holick MF — membrane-enhanced thermal isomerisation",
-                     note: "Liposomal model: previtamin D3 → D3 runs ~10× faster in membranes than in solution.",
+        SciReference(title: "Tian XQ & Holick MF. Membrane-enhanced thermal isomerisation",
+                     note: "Liposomal model: previtamin D3 becomes D3 about ten times faster in membranes than in solution.",
                      url: "https://www.sciencedirect.com/science/article/pii/S002192581987895X"),
         SciReference(title: "Holick MF et al. (1981), Science 211:590–3",
-                     note: "Photoequilibrium: previtamin D3 plateaus at ~10–15% conversion, partitioning into lumisterol3 and tachysterol3.",
+                     note: "Photoequilibrium: previtamin D3 plateaus at about 10–15% conversion, partitioning into lumisterol3 and tachysterol3.",
                      url: "https://www.science.org/doi/10.1126/science.6256855"),
-        SciReference(title: "Slominski AT et al. — CYP11A1-derived vitamin D and lumisterol metabolites",
+        SciReference(title: "Slominski AT et al. CYP11A1-derived vitamin D and lumisterol metabolites",
                      note: "Photoproducts converted to active metabolites acting on VDR, AhR, LXR and PPARγ; found in human skin and serum.",
                      url: "https://www.sciencedirect.com/science/article/pii/S0022202X24003865"),
         SciReference(title: "Liu D, Weller RB et al. (2014), J Invest Dermatol",
                      note: "UVA lowers blood pressure independently of vitamin D, via cutaneous nitric oxide stores.",
                      url: "https://pubmed.ncbi.nlm.nih.gov/24445737/"),
         SciReference(title: "Autier P et al. (2014), Lancet Diabetes Endocrinol 2:76–89",
-                     note: "The observational–interventional gap; argues low 25(OH)D substantially indexes ill health.",
+                     note: "The observational versus interventional gap; argues low 25(OH)D substantially indexes ill health.",
                      url: "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(13)70165-7/abstract"),
-        SciReference(title: "Endocrine Society (2024) — Vitamin D for the Prevention of Disease",
-                     note: "Current clinical guideline. Recommends against routine 25(OH)D screening in healthy adults, and against exceeding standard intakes for most under 75 — authoritative, up-to-date support for the evidence gap above.",
+        SciReference(title: "Endocrine Society (2024). Vitamin D for the Prevention of Disease",
+                     note: "Current clinical guideline. Recommends against routine 25(OH)D screening in healthy adults, and against exceeding standard intakes for most under 75. Authoritative, up-to-date support for the evidence gap above.",
                      url: "https://www.endocrine.org/clinical-practice-guidelines/vitamin-d-for-prevention-of-disease"),
         SciReference(title: "Young AR et al. (2021), PNAS 118(40)",
                      note: "In vivo action spectrum revision; sunburn-weighted dose poorly predicts synthesis. Underpins this app's elevation weighting.",
