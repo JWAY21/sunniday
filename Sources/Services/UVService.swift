@@ -501,13 +501,11 @@ class UVService: ObservableObject {
                     identifier: "sunrise"
                 )
                 
-                self.scheduleNotification(
-                    at: self.todaySunset,
-                    title: "🌅 The sun is setting.",
-                    body: "Check your vitamin D progress in SUNniDAY.",
-                    identifier: "sunset"
-                )
-                
+                // The sunset "check your progress" notification was removed: it
+                // fired every evening with nothing actionable in it. Its
+                // identifier stays in the removal list above so any already
+                // scheduled on existing installs get cleared on next launch.
+
                 // Schedule solar noon notification (30 minutes before)
                 if let sunrise = self.todaySunrise, let sunset = self.todaySunset {
                     // Calculate solar noon as midpoint between sunrise and sunset
