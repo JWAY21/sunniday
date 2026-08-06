@@ -114,7 +114,10 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height)
                         .frame(width: geometry.size.width)
                     }
-                    .scrollDisabled(contentFitsInScreen(geometry: geometry))
+                    // Never disable scrolling based on a guess at content height.
+                    // scrollBounceBehavior gives the same "no rubber-banding when
+                    // it all fits" feel, but measures the real content instead.
+                    .scrollBounceBehavior(.basedOnSize)
                 }
             }
             
@@ -1088,12 +1091,6 @@ struct ContentView: View {
         }
     }
     
-    private func contentFitsInScreen(geometry: GeometryProxy) -> Bool {
-        // Estimate content height
-        let estimatedHeight: CGFloat = 40 + 250 + 140 + 70 + 70 + 70 + 40 // header + UV + vitD + button + clothing + skin + padding
-        let offlineBarHeight: CGFloat = uvService.isOfflineMode ? 50 : 0
-        return estimatedHeight + offlineBarHeight < geometry.size.height
-    }
 }
 
 struct ClothingPicker: View {

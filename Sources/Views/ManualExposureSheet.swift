@@ -81,6 +81,7 @@ struct ManualExposureSheet: View {
                 )
                 .ignoresSafeArea()
                 
+                VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 24) {
                     // Header icon
@@ -105,6 +106,7 @@ struct ManualExposureSheet: View {
                                 .labelsHidden()
                                 .colorScheme(.dark)
                                 .frame(height: 100)
+                                    .clipped()
                                 .onChange(of: sessionDate) { _, newDate in
                                     // Clamp start/end into valid range for new date
                                     let dayStart = calendar.startOfDay(for: newDate)
@@ -127,6 +129,7 @@ struct ManualExposureSheet: View {
                                 .labelsHidden()
                                 .colorScheme(.dark)
                                 .frame(height: 100)
+                                    .clipped()
                                 .onChange(of: startTime) { _, newValue in
                                     if endTime <= newValue {
                                         let range = endTimeRange
@@ -147,6 +150,7 @@ struct ManualExposureSheet: View {
                                 .labelsHidden()
                                 .colorScheme(.dark)
                                 .frame(height: 100)
+                                    .clipped()
                                 .onChange(of: endTime) { _, _ in
                                     calculateVitaminD()
                                 }
@@ -308,18 +312,26 @@ struct ManualExposureSheet: View {
                         .background(Color.black.opacity(0.2))
                         .cornerRadius(12)
                     }
-                    // Close button
-                    Button(action: { dismiss() }) {
-                        Text("Cancel")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                    }
-                    .padding(.bottom, 20)
                 }
                 .padding(.horizontal, 20)
-            }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+
+                // Cancel stays pinned below the scroll area. It used to sit
+                // inside the ScrollView, so on a short window (an iPad
+                // compatibility window, or landscape) it fell off the bottom
+                // and the wheel pickers above swallowed the drag needed to
+                // scroll down to it.
+                Button(action: { dismiss() }) {
+                    Text("Cancel")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                }
             }
             .navigationTitle("Log Past Exposure")
             .navigationBarTitleDisplayMode(.inline)

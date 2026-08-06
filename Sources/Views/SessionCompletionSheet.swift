@@ -81,6 +81,7 @@ struct SessionCompletionSheet: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                  ScrollView {
                     VStack(spacing: 20) {
                         Image(systemName: "sun.max.fill")
                             .font(.system(size: 60))
@@ -131,6 +132,7 @@ struct SessionCompletionSheet: View {
                                     .labelsHidden()
                                     .colorScheme(.dark)
                                     .frame(height: 100)
+                                    .clipped()
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
@@ -150,6 +152,7 @@ struct SessionCompletionSheet: View {
                                     .labelsHidden()
                                     .colorScheme(.dark)
                                     .frame(height: 100)
+                                    .clipped()
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
@@ -159,9 +162,14 @@ struct SessionCompletionSheet: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
                     }
+                    .padding(.bottom, 8)
+                  }
+                  .scrollBounceBehavior(.basedOnSize)
 
-                    Spacer()
-
+                    // Actions stay pinned below the scroll area. Previously a
+                    // Spacer pushed them down, so on a short window (an iPad
+                    // compatibility window, or landscape) they were shoved off
+                    // screen with no way to scroll to them.
                     VStack(spacing: 12) {
                         Button(action: { saveSession() }) {
                             HStack {
