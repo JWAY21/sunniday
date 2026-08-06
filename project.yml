@@ -24,6 +24,10 @@ targets:
       properties:
         CFBundleDisplayName: SUNniDAY
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        # Without this the app target gets XcodeGen's literal "1" default and
+        # silently ignores CURRENT_PROJECT_VERSION, while the widget below
+        # picks the bump up — so the two could ship mismatched build numbers.
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.healthcare-fitness
         UILaunchStoryboardName: LaunchScreen
         UISupportedInterfaceOrientations: 
