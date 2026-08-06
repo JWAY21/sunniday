@@ -7,7 +7,7 @@ settings:
   base:
     PRODUCT_BUNDLE_IDENTIFIER: com.jway.sunniday
     MARKETING_VERSION: 1.2
-    CURRENT_PROJECT_VERSION: 2
+    CURRENT_PROJECT_VERSION: 3
     DEVELOPMENT_TEAM: "G46528YB86"
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_IDENTITY: "Apple Development"
@@ -19,6 +19,10 @@ targets:
       - Sources
       - Resources/Assets.xcassets
       - Resources/LaunchScreen.storyboard
+      # Required since May 2024. UserDefaults is a required-reason API, so
+      # without this the upload is flagged ITMS-91053. Must sit under
+      # sources: — xcodegen ignores a resources: key (see ci notes).
+      - Resources/PrivacyInfo.xcprivacy
     info:
       path: Resources/Info.plist
       properties:
@@ -34,7 +38,10 @@ targets:
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
         NSLocationWhenInUseUsageDescription: "SUNniDAY needs your location to determine UV levels at your current position"
-        NSLocationAlwaysAndWhenInUseUsageDescription: "SUNniDAY needs your location to track UV exposure throughout the day"
+        # No NSLocationAlwaysAndWhenInUseUsageDescription: the app only ever
+        # calls requestWhenInUseAuthorization() and never sets
+        # allowsBackgroundLocationUpdates, so declaring Always asked for more
+        # access than the app uses (Guideline 5.1.1).
         NSHealthShareUsageDescription: "SUNniDAY reads your health data to provide personalized vitamin D recommendations"
         NSHealthUpdateUsageDescription: "SUNniDAY saves your vitamin D intake data to Health app"
         UIUserInterfaceStyle: Light
@@ -60,10 +67,12 @@ targets:
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: false
     capabilities:
       - com.apple.HealthKit
-      - com.apple.BackgroundModes:
-          enabled: true
-          modes:
-            - location
+      # No BackgroundModes. This block never reached the built Info.plist
+      # (xcodegen capabilities only drive entitlements), and the app has no
+      # background location: it never sets allowsBackgroundLocationUpdates and
+      # restores a session from a persisted timestamp instead. Removed so a
+      # future xcodegen that does honour it can't silently declare an unused
+      # background mode (Guideline 2.5.4).
       - com.apple.ApplicationGroups:
           enabled: true
           groups:

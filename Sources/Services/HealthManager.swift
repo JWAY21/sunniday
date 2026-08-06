@@ -16,15 +16,19 @@ class HealthManager: ObservableObject {
         checkAuthorizationStatus()
     }
     
-    func requestAuthorization() {
+    /// - Parameter completion: called once the Health sheet has been dismissed,
+    ///   whatever the user chose. Used to chain the notification prompt so the
+    ///   two don't stack on top of each other at first launch.
+    func requestAuthorization(completion: (() -> Void)? = nil) {
         guard HKHealthStore.isHealthDataAvailable() else {
             lastError = "Health data not available on this device"
+            completion?()
             return
         }
-        
+
         let typesToWrite: Set<HKSampleType> = [vitaminDType]
         let typesToRead: Set<HKObjectType> = [vitaminDType, fitzpatrickSkinType, dateOfBirthType]
-        
+
         healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead) { [weak self] success, error in
             DispatchQueue.main.async {
                 self?.isAuthorized = success
@@ -36,6 +40,7 @@ class HealthManager: ObservableObject {
                     Self.logger.error("Health authorization failed: \(msg, privacy: .public)")
                 }
                 #endif
+                completion?()
             }
         }
     }

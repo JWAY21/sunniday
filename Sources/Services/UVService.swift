@@ -487,9 +487,15 @@ class UVService: ObservableObject {
         
         guard !isToday else { return }
         
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            guard granted else { return }
-            
+        // Only schedule against permission the user has already given. This
+        // used to call requestAuthorization, which fired the system alert as
+        // soon as UV data loaded — landing it on top of the Health sheet at
+        // first launch. The app now asks in context when a session starts, and
+        // scheduling picks up from the next UV refresh once granted.
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized
+                    || settings.authorizationStatus == .provisional else { return }
+
             // Remove old notifications
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["sunrise", "sunset", "safeTimeReached", "solarNoon"])
             

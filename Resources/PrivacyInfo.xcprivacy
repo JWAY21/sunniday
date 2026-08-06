@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- SUNniDAY collects no data. There is no analytics SDK, no backend, and
+	     no account system. The only network call is to Open-Meteo for UV and
+	     cloud forecasts; health data stays in HealthKit on device. This matches
+	     the "Data Not Collected" declaration in App Store Connect. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- Preferences (skin type, clothing, units) and the active-session
+			     state. CA92.1 covers the app's own defaults; 1C8F.1 covers the
+			     group.jway21.sunniday.widget suite shared with the widget. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+				<string>1C8F.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

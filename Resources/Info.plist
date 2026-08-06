@@ -39,8 +39,6 @@
 	<string>SUNniDAY reads your health data to provide personalized vitamin D recommendations</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>SUNniDAY saves your vitamin D intake data to Health app</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>SUNniDAY needs your location to track UV exposure throughout the day</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SUNniDAY needs your location to determine UV levels at your current position</string>
 	<key>NSUserNotificationCenterUsageDescription</key>

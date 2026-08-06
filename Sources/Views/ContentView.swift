@@ -22,6 +22,9 @@ struct ContentView: View {
     @State private var showSkinTypePicker = false
     @State private var todaysTotal: Double = 0
     @State private var currentGradientColors: [Color] = []
+    /// Stops the Health/notification prompt chain running twice when the
+    /// location authorization callback fires more than once.
+    @State private var hasRequestedRemainingPermissions = false
     @State private var showInfoSheet = false
     @State private var showLifecycleSheet = false
     @State private var showHistorySheet = false
@@ -225,6 +228,12 @@ struct ContentView: View {
         }
         .onOpenURL { url in
             handleURL(url)
+        }
+        .onChange(of: locationManager.authorizationStatus) { _, newStatus in
+            // The location prompt has been answered (either way), so it is now
+            // safe to present the Health sheet without it being covered.
+            guard newStatus != .notDetermined else { return }
+            requestRemainingPermissions()
         }
         .alert("Location Access Required", isPresented: $locationManager.showLocationDeniedAlert) {
             Button("Cancel", role: .cancel) { }
@@ -527,6 +536,7 @@ struct ContentView: View {
                 } else {
                     // Starting session - just toggle
                     vitaminDCalculator.toggleSunExposure(uvIndex: uvService.currentUV)
+                    requestNotificationPermissionIfNeeded()
                 }
             }) {
                 HStack {
@@ -862,15 +872,43 @@ struct ContentView: View {
     private var safeExposureTime: Int {
         uvService.burnTimeMinutes[vitaminDCalculator.skinType.rawValue] ?? 60
     }
-    
-    private func setupApp() {
-        locationManager.requestPermission()
+
+    /// Presented once the location prompt has been answered, so the Health
+    /// sheet is never covered by it. Guarded to run once per launch.
+    private func requestRemainingPermissions() {
+        guard !hasRequestedRemainingPermissions else { return }
+        hasRequestedRemainingPermissions = true
         healthManager.requestAuthorization()
+    }
+
+    /// Notifications are burn warnings and sun events, which only mean anything
+    /// once the user is actually tracking. Asking here rather than at launch
+    /// keeps the alert off the Health sheet (HealthKit calls its completion
+    /// before that sheet is dismissed, so it cannot be chained) and asks in
+    /// context, which is what the HIG wants.
+    private func requestNotificationPermissionIfNeeded() {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .notDetermined else { return }
+            center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        }
+    }
+
+    private func setupApp() {
+        // Permissions are requested one at a time. Asking for all three at
+        // once stacked the notification and location alerts on top of the
+        // Health sheet at first launch, leaving the Health sheet unreachable
+        // underneath. Location goes first because nothing works without it;
+        // Health and notifications are chained behind it.
+        locationManager.requestPermission()
+        if locationManager.authorizationStatus != .notDetermined {
+            // Returning user: no location prompt will appear, so the chain
+            // would never be kicked off by the authorization change below.
+            requestRemainingPermissions()
+        }
         loadTodaysTotal()
         currentGradientColors = gradientColors
-        // Request notification permissions once up front (for burn warnings and sun events)
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-        
+
         // Connect services - MUST set modelContext before any UV data fetching
         vitaminDCalculator.setHealthManager(healthManager)
         vitaminDCalculator.setUVService(uvService)
