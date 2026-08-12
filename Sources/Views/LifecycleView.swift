@@ -11,6 +11,7 @@ struct LifecycleView: View {
     @Environment(\.dismiss) var dismiss
 
     @AppStorage("lifecycleShowsScience") private var showsScience = false
+    @State private var showSources = false
 
     var body: some View {
         NavigationStack {
@@ -51,12 +52,30 @@ struct LifecycleView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showSources = true
+                    } label: {
+                        // Explicit stack rather than Label: the navigation bar
+                        // collapses a Label to icon-only regardless of
+                        // labelStyle, and an unlabelled icon is exactly the
+                        // discoverability problem this is meant to solve.
+                        HStack(spacing: 4) {
+                            Image(systemName: "book.fill")
+                                .font(.system(size: 13))
+                            Text("Sources")
+                        }
+                        .foregroundColor(.white)
+                        .fontWeight(.semibold)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") { dismiss() }
                         .foregroundColor(.white)
                         .fontWeight(.semibold)
                 }
             }
+            .sheet(isPresented: $showSources) { SourcesView() }
         }
     }
 }
@@ -590,32 +609,10 @@ private struct LifecycleScience: View {
     // MARK: References
 
     private var referencesCard: some View {
+        // Rendered from AppReferences.biology, shared with the Sources sheet.
         InfoCard(icon: "book.fill", title: "Sources") {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(SciReference.all) { ref in
-                    if let url = URL(string: ref.url) {
-                        Link(destination: url) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                HStack(spacing: 4) {
-                                    Text(ref.title)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .underline()
-                                        .multilineTextAlignment(.leading)
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.system(size: 9, weight: .bold))
-                                }
-                                Text(ref.note)
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.white.opacity(0.75))
-                                    .lineSpacing(2)
-                                    .multilineTextAlignment(.leading)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(.white)
-                        }
-                    }
-                }
+                ForEach(AppReferences.biology) { ReferenceLink(reference: $0) }
             }
         }
     }
@@ -750,45 +747,4 @@ private struct SciContrast: Identifiable {
     ]
 }
 
-private struct SciReference: Identifiable {
-    let id = UUID()
-    let title: String
-    let note: String
-    let url: String
 
-    static let all: [SciReference] = [
-        SciReference(title: "Prabhu AV et al., J Biol Chem. Cholesterol-mediated degradation of DHCR7",
-                     note: "DHCR7 makes cholesterol from 7-DHC; cholesterol accelerates its breakdown, raising 7-DHC and vitamin D synthesis. The branch point.",
-                     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4861412/"),
-        SciReference(title: "Zerenturk EJ et al. DHCR7: a vital enzyme switch",
-                     note: "Review of DHCR7 governing the cholesterol and vitamin D split.",
-                     url: "https://www.sciencedirect.com/science/article/abs/pii/S0163782716300340"),
-        SciReference(title: "Origin of 7-dehydrocholesterol (provitamin D) in the skin",
-                     note: "Cutaneous origin of the 7-DHC pool.",
-                     url: "https://www.jidonline.org/article/S0022-202X(15)34937-X/fulltext"),
-        SciReference(title: "MacLaughlin JA, Anderson RR, Holick MF (1982), Science 216:1001–3",
-                     note: "Action spectrum for previtamin D3 photosynthesis; optimum 295–300 nm.",
-                     url: "https://www.science.org/doi/10.1126/science.6281884"),
-        SciReference(title: "Tian XQ & Holick MF. Membrane-enhanced thermal isomerisation",
-                     note: "Liposomal model: previtamin D3 becomes D3 about ten times faster in membranes than in solution.",
-                     url: "https://www.sciencedirect.com/science/article/pii/S002192581987895X"),
-        SciReference(title: "Holick MF et al. (1981), Science 211:590–3",
-                     note: "Photoequilibrium: previtamin D3 plateaus at about 10–15% conversion, partitioning into lumisterol3 and tachysterol3.",
-                     url: "https://www.science.org/doi/10.1126/science.6256855"),
-        SciReference(title: "Slominski AT et al. CYP11A1-derived vitamin D and lumisterol metabolites",
-                     note: "Photoproducts converted to active metabolites acting on VDR, AhR, LXR and PPARγ; found in human skin and serum.",
-                     url: "https://www.sciencedirect.com/science/article/pii/S0022202X24003865"),
-        SciReference(title: "Liu D, Weller RB et al. (2014), J Invest Dermatol",
-                     note: "UVA lowers blood pressure independently of vitamin D, via cutaneous nitric oxide stores.",
-                     url: "https://pubmed.ncbi.nlm.nih.gov/24445737/"),
-        SciReference(title: "Autier P et al. (2014), Lancet Diabetes Endocrinol 2:76–89",
-                     note: "The observational versus interventional gap; argues low 25(OH)D substantially indexes ill health.",
-                     url: "https://www.thelancet.com/journals/landia/article/PIIS2213-8587(13)70165-7/abstract"),
-        SciReference(title: "Endocrine Society (2024). Vitamin D for the Prevention of Disease",
-                     note: "Current clinical guideline. Recommends against routine 25(OH)D screening in healthy adults, and against exceeding standard intakes for most under 75. Authoritative, up-to-date support for the evidence gap above.",
-                     url: "https://www.endocrine.org/clinical-practice-guidelines/vitamin-d-for-prevention-of-disease"),
-        SciReference(title: "Young AR et al. (2021), PNAS 118(40)",
-                     note: "In vivo action spectrum revision; sunburn-weighted dose poorly predicts synthesis. Underpins this app's elevation weighting.",
-                     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8501902/")
-    ]
-}
