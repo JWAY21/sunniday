@@ -394,6 +394,7 @@ private struct LifecycleScience: View {
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 200)
+                .chartLabelsLegible()
 
                 LifeText("Schematic, drawn to the behaviour in Holick 1981. Exact proportions vary with wavelength, temperature and skin type. The ceiling on previtamin D3 is the point: it is why sunlight cannot cause vitamin D toxicity.", size: 12)
             }
@@ -450,6 +451,7 @@ private struct LifecycleScience: View {
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 180)
+                .chartLabelsLegible()
 
                 LifeText("Illustrative rates. The consequence is real: cutaneous vitamin D3 keeps appearing for a day or more after you leave the sun.", size: 12)
             }
@@ -536,6 +538,7 @@ private struct LifecycleScience: View {
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 190)
+                .chartLabelsLegible()
 
                 LifeText("The active hormone (calcitriol) is gone within a day, so the body retunes it hour to hour. The storage form (25(OH)D) has a roughly 3-week half-life, which is why a blood test reflects months of habit, and why the history screen's trend line weights past days by that same decay.", size: 12)
             }

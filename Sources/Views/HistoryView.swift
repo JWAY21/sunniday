@@ -198,6 +198,7 @@ struct HistoryView: View {
                                         .cornerRadius(12)
                                 }
                                 .frame(height: 240)
+                                .chartLabelsLegible()
                                 .padding(.horizontal, 20)
 
                                 // Legend

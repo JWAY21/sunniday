@@ -87,6 +87,21 @@ struct InfoView: View {
 
 // MARK: - Shared building blocks
 
+extension View {
+    /// Caps Dynamic Type growth inside a chart.
+    ///
+    /// Swift Charts sizes its axis tick labels from Dynamic Type, even though
+    /// the rest of this app uses fixed point sizes and does not scale at all.
+    /// At the accessibility sizes those labels grew until they overlapped each
+    /// other and spilled across the plot area, so the charts became unreadable
+    /// rather than merely large. Capping keeps some scaling for people who need
+    /// it while keeping the axes legible, and matches the fixed sizing used
+    /// everywhere else in the app.
+    func chartLabelsLegible() -> some View {
+        dynamicTypeSize(...DynamicTypeSize.xLarge)
+    }
+}
+
 struct InfoCard<Content: View>: View {
     let icon: String
     let title: String
@@ -308,6 +323,7 @@ private struct ScienceContent: View {
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 170)
+                .chartLabelsLegible()
 
                 InfoText("The gold point is 1 MED. Note that doubling the dose from there adds far less than the first MED did.")
             }
@@ -405,6 +421,7 @@ private struct ScienceContent: View {
                     AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                 } }
                 .frame(height: 160)
+                .chartLabelsLegible()
 
                 InfoText("The 1.5 exponent is an engineering approximation of the action-spectrum ratio, not a measured constant. It is the least certain number in the model.")
             }
@@ -481,6 +498,7 @@ private struct ScienceContent: View {
                         AxisValueLabel().foregroundStyle(.white.opacity(0.8))
                     } }
                     .frame(height: 160)
+                    .chartLabelsLegible()
 
                     if let noon = solarNoon {
                         VStack(alignment: .leading, spacing: 5) {
