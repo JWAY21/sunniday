@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showClothingPicker = false
     @State private var showSunscreenPicker = false
     @State private var showSkinTypePicker = false
+    @State private var showBirthYearPicker = false
     @State private var todaysTotal: Double = 0
     @State private var currentGradientColors: [Color] = []
     /// Stops the Health/notification prompt chain running twice when the
@@ -109,6 +110,7 @@ struct ContentView: View {
                                 skinTypeSection
                                 unitsSection
                             }
+                            birthYearSection
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 20)
@@ -650,6 +652,35 @@ struct ContentView: View {
         }
     }
     
+    /// Full width rather than paired: it has no natural partner control, and it
+    /// is set once rather than adjusted per session like clothing or sunscreen.
+    private var birthYearSection: some View {
+        Button(action: { showBirthYearPicker.toggle() }) {
+            HStack {
+                Text("BIRTH YEAR")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white.opacity(0.7))
+                    .tracking(1.5)
+
+                Spacer()
+
+                Text(vitaminDCalculator.birthYear.map(String.init) ?? "Not set")
+                    .font(.system(size: 16, weight: .medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12))
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 15)
+            .background(Color.black.opacity(0.2))
+            .cornerRadius(15)
+        }
+        .sheet(isPresented: $showBirthYearPicker) {
+            BirthYearPicker(selection: $vitaminDCalculator.birthYear)
+        }
+    }
+
     private var skinTypeSection: some View {
         Button(action: { showSkinTypePicker.toggle() }) {
             VStack(spacing: 10) {
@@ -1157,6 +1188,73 @@ struct ClothingPicker: View {
                 }
             }
             .navigationTitle("Clothing Level")
+            .navigationBarItems(trailing: Button("Done") { dismiss() })
+            .preferredColorScheme(.dark)
+        }
+        .presentationBackground(Color(UIColor.systemBackground).opacity(0.99))
+    }
+}
+
+/// Year of birth only.
+///
+/// The synthesis model uses age in whole years to apply a modest decline
+/// factor, so a full date of birth was more personal detail than the
+/// calculation ever needed.
+struct BirthYearPicker: View {
+    @Binding var selection: Int?
+    @Environment(\.dismiss) var dismiss
+
+    /// 13 is the App Store minimum age, 110 a generous upper bound.
+    private var years: [Int] {
+        let thisYear = Calendar.current.component(.year, from: Date())
+        return Array(((thisYear - 110)...(thisYear - 13)).reversed())
+    }
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    Text("Vitamin D synthesis declines gradually with age, so SUNniDAY adjusts its estimate if you tell it roughly how old you are. The year is enough; it never asks for a full date of birth. Leave it unset and no age adjustment is applied.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+
+                Section {
+                    Button(action: {
+                        selection = nil
+                        dismiss()
+                    }) {
+                        HStack {
+                            Text("Not set")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            if selection == nil {
+                                Image(systemName: "checkmark").foregroundColor(.blue)
+                            }
+                        }
+                    }
+                }
+
+                Section {
+                    ForEach(years, id: \.self) { year in
+                        Button(action: {
+                            selection = year
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text(String(year))
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                if selection == year {
+                                    Image(systemName: "checkmark").foregroundColor(.blue)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Year of Birth")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(trailing: Button("Done") { dismiss() })
             .preferredColorScheme(.dark)
         }

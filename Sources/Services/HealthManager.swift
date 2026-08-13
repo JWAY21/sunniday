@@ -10,7 +10,6 @@ class HealthManager: ObservableObject {
     private let healthStore = HKHealthStore()
     private let vitaminDType = HKQuantityType.quantityType(forIdentifier: .dietaryVitaminD)!
     private let fitzpatrickSkinType = HKObjectType.characteristicType(forIdentifier: .fitzpatrickSkinType)!
-    private let dateOfBirthType = HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
     
     init() {
         checkAuthorizationStatus()
@@ -27,7 +26,10 @@ class HealthManager: ObservableObject {
         }
 
         let typesToWrite: Set<HKSampleType> = [vitaminDType]
-        let typesToRead: Set<HKObjectType> = [vitaminDType, fitzpatrickSkinType, dateOfBirthType]
+        // No dateOfBirth: the model only needs age in whole years, so the app
+        // asks for a birth year instead of requesting a full date of birth on
+        // the Health permission sheet.
+        let typesToRead: Set<HKObjectType> = [vitaminDType, fitzpatrickSkinType]
 
         healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead) { [weak self] success, error in
             DispatchQueue.main.async {
@@ -182,32 +184,7 @@ class HealthManager: ObservableObject {
         }
     }
     
-    func getAge(completion: @escaping (Int?) -> Void) {
-        do {
-            let dateOfBirth = try healthStore.dateOfBirthComponents()
-            let calendar = Calendar.current
-            let now = Date()
-            
-            // Calculate age from date of birth
-            if let birthDate = calendar.date(from: dateOfBirth) {
-                let ageComponents = calendar.dateComponents([.year], from: birthDate, to: now)
-                let age = ageComponents.year
-                
-                DispatchQueue.main.async {
-                    completion(age)
-                }
-            } else {
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
-            }
-        } catch {
-            DispatchQueue.main.async {
-                self.lastError = error.localizedDescription
-                completion(nil)
-            }
-        }
-    }
+
     
     func readVitaminDIntake(from startDate: Date, to endDate: Date, completion: @escaping (Double, Error?) -> Void) {
         let predicate = HKQuery.predicateForSamples(

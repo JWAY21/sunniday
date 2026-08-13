@@ -601,7 +601,7 @@ private struct ScienceContent: View {
                     Text("Age")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white.opacity(0.85))
-                    InfoText("Modelled as full capacity to age 20, then declining 1.5% a year to a floor of 25% at age 70. Applied only when age is available from Health.\n\nThis one is contested, see limitations.")
+                    InfoText("Modelled as full capacity to age 20, then declining 1.5% a year to a floor of 25% at age 70. Applied only when you have set a birth year on the main screen. Leave it unset and no age adjustment is made.\n\nThis one is contested, see limitations.")
                 }
             }
         }

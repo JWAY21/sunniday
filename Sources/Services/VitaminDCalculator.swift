@@ -137,16 +137,32 @@ class VitaminDCalculator: ObservableObject {
     /// values to the whole session retroactively would (for example) zero out
     /// everything synthesised earlier once the sun sets.
     @Published var cumulativeVitaminDDose: Double = 0.0
-    @Published var userAge: Int? = nil {
+    /// Year of birth, entered in the app.
+    ///
+    /// The model only ever uses age in whole years, so a full date of birth was
+    /// more personal data than the calculation needs. Previously this was read
+    /// from HealthKit's dateOfBirth, which put "Date of Birth" on the Health
+    /// permission sheet for a one-decimal-place adjustment. A year is enough.
+    @Published var birthYear: Int? = nil {
         didSet {
-            if let age = userAge {
-                UserDefaults.standard.set(age, forKey: "userAge")
+            if let year = birthYear {
+                UserDefaults.standard.set(year, forKey: "birthYear")
             } else {
-                UserDefaults.standard.removeObject(forKey: "userAge")
+                UserDefaults.standard.removeObject(forKey: "birthYear")
             }
+            // The age factor scales the live rate, so it has to be recomputed
+            // here. The old HealthKit path did this from its completion
+            // handler; without it the rate silently kept the previous age.
+            updateVitaminDRate(uvIndex: lastUV)
         }
     }
-    @Published var ageFromHealth = false
+
+    /// Age in whole years, derived from `birthYear`. Nil when unset, which
+    /// leaves the age factor at 1.0.
+    var userAge: Int? {
+        guard let birthYear else { return nil }
+        return Calendar.current.component(.year, from: Date()) - birthYear
+    }
     @Published var currentUVQualityFactor: Double = 1.0
     @Published var currentAdaptationFactor: Double = 1.0
     
@@ -235,7 +251,7 @@ class VitaminDCalculator: ObservableObject {
     func setHealthManager(_ healthManager: HealthManager) {
         self.healthManager = healthManager
         checkHealthKitSkinType()
-        checkHealthKitAge()
+        // Age is no longer read from Health; birthYear is set in the app.
         updateAdaptationFactor()
         // Prime today's base from Health
         refreshTodaysHealthBase(force: true)
@@ -266,10 +282,16 @@ class VitaminDCalculator: ObservableObject {
             skinType = skin
         }
         
-        if let savedAge = UserDefaults.standard.object(forKey: "userAge") as? Int {
-            userAge = savedAge
+        if let savedYear = UserDefaults.standard.object(forKey: "birthYear") as? Int {
+            birthYear = savedYear
+        } else if let legacyAge = UserDefaults.standard.object(forKey: "userAge") as? Int {
+            // Existing installs stored an age derived from HealthKit's date of
+            // birth. Convert once so those users keep their age factor without
+            // being asked again, then drop the old key.
+            birthYear = Calendar.current.component(.year, from: Date()) - legacyAge
+            UserDefaults.standard.removeObject(forKey: "userAge")
         } else {
-            userAge = nil
+            birthYear = nil
         }
     }
     
@@ -588,22 +610,7 @@ class VitaminDCalculator: ObservableObject {
         }
     }
     
-    private func checkHealthKitAge() {
-        healthManager?.getAge { [weak self] age in
-            guard let self = self else { return }
-            
-            if let age = age {
-                self.userAge = age
-                self.ageFromHealth = true
-            } else {
-                self.userAge = nil
-                self.ageFromHealth = false
-            }
-            
-            // Recalculate vitamin D rate with new age (or without it)
-            self.updateVitaminDRate(uvIndex: self.lastUV)
-        }
-    }
+
     
     private func checkIfMatchesHealthKitSkinType() {
         // If user manually selects the same skin type as HealthKit, show the heart icon
