@@ -10,7 +10,10 @@ class HealthManager: ObservableObject {
     private let healthStore = HKHealthStore()
     private let vitaminDType = HKQuantityType.quantityType(forIdentifier: .dietaryVitaminD)!
     private let fitzpatrickSkinType = HKObjectType.characteristicType(forIdentifier: .fitzpatrickSkinType)!
-    
+    /// Requested only on demand, never in the first-launch sheet. HealthKit has
+    /// no "age" characteristic, so a birth year can only come from here.
+    private let dateOfBirthType = HKObjectType.characteristicType(forIdentifier: .dateOfBirth)!
+
     init() {
         checkAuthorizationStatus()
     }
@@ -47,6 +50,35 @@ class HealthManager: ObservableObject {
         }
     }
     
+    /// Asks Health for the date of birth and hands back the year only.
+    ///
+    /// Called only when the user taps Import in Settings, so the request never
+    /// appears in the first-launch sheet. HealthKit has no age characteristic,
+    /// so the sheet will say "Date of Birth" even though the app keeps nothing
+    /// but the year.
+    ///
+    /// Read authorization is deliberately opaque in HealthKit: a denial is
+    /// indistinguishable from "no data", by design, so an app cannot infer
+    /// health facts from the permission state. There is therefore no way to
+    /// report *why* this failed, only that no year came back.
+    func importBirthYearFromHealth(completion: @escaping (Int?) -> Void) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            completion(nil)
+            return
+        }
+
+        healthStore.requestAuthorization(toShare: [], read: [dateOfBirthType]) { [weak self] _, _ in
+            guard let self else {
+                DispatchQueue.main.async { completion(nil) }
+                return
+            }
+            // Attempt the read regardless of the reported success flag: that
+            // flag only says the sheet completed, not that access was granted.
+            let year = try? self.healthStore.dateOfBirthComponents().year
+            DispatchQueue.main.async { completion(year ?? nil) }
+        }
+    }
+
     private func checkAuthorizationStatus() {
         let status = healthStore.authorizationStatus(for: vitaminDType)
         isAuthorized = status == .sharingAuthorized

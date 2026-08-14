@@ -701,6 +701,7 @@ struct ContentView: View {
         .sheet(isPresented: $showSettingsSheet) {
             SettingsView()
                 .environmentObject(vitaminDCalculator)
+                .environmentObject(healthManager)
         }
         .sheet(isPresented: $showManualExposureSheet) {
             ManualExposureSheet()
