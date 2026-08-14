@@ -57,25 +57,58 @@ class HealthManager: ObservableObject {
     /// so the sheet will say "Date of Birth" even though the app keeps nothing
     /// but the year.
     ///
-    /// Read authorization is deliberately opaque in HealthKit: a denial is
-    /// indistinguishable from "no data", by design, so an app cannot infer
-    /// health facts from the permission state. There is therefore no way to
-    /// report *why* this failed, only that no year came back.
-    func importBirthYearFromHealth(completion: @escaping (Int?) -> Void) {
+    /// Why an import produced no year. The two failures need different advice,
+    /// so they are reported separately rather than collapsed into "it failed".
+    enum BirthYearImportResult {
+        case imported(Int)
+        /// Health holds no date of birth to read.
+        case noDateInHealth
+        /// Read access is off. iOS will not re-present the permission sheet for
+        /// a type the user has already answered, so the only way back is the
+        /// Health app itself.
+        case accessDenied
+        case healthUnavailable
+    }
+
+    func importBirthYearFromHealth(completion: @escaping (BirthYearImportResult) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
-            completion(nil)
+            completion(.healthUnavailable)
             return
         }
 
         healthStore.requestAuthorization(toShare: [], read: [dateOfBirthType]) { [weak self] _, _ in
             guard let self else {
-                DispatchQueue.main.async { completion(nil) }
+                DispatchQueue.main.async { completion(.healthUnavailable) }
                 return
             }
             // Attempt the read regardless of the reported success flag: that
             // flag only says the sheet completed, not that access was granted.
-            let year = try? self.healthStore.dateOfBirthComponents().year
-            DispatchQueue.main.async { completion(year ?? nil) }
+            // Note the sheet does not appear at all if this app has already been
+            // asked about date of birth on this device, which is the usual cause
+            // of a silent failure on an install that predates this feature.
+            var result: BirthYearImportResult
+            do {
+                let components = try self.healthStore.dateOfBirthComponents()
+                if let year = components.year {
+                    result = .imported(year)
+                } else {
+                    result = .noDateInHealth
+                }
+            } catch {
+                let code = (error as NSError).code
+                #if DEBUG
+                Self.logger.error("Birth year import failed: \(error.localizedDescription, privacy: .public) (code \(code))")
+                #endif
+                // HKError.errorAuthorizationDenied / errorAuthorizationNotDetermined
+                if code == HKError.errorAuthorizationDenied.rawValue
+                    || code == HKError.errorAuthorizationNotDetermined.rawValue {
+                    result = .accessDenied
+                } else {
+                    result = .noDateInHealth
+                }
+            }
+            let outcome = result
+            DispatchQueue.main.async { completion(outcome) }
         }
     }
 

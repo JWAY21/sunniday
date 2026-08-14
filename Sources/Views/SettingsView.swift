@@ -12,9 +12,9 @@ struct SettingsView: View {
 
     @State private var showBirthYearPicker = false
     @State private var isImporting = false
-    /// Set when an import returns nothing, so the fallback advice only appears
-    /// once the user has actually tried.
-    @State private var importFailed = false
+    /// Nil until an import has actually been attempted, so the advice below
+    /// only appears once the user has tried.
+    @State private var lastImport: HealthManager.BirthYearImportResult?
 
     var body: some View {
         NavigationView {
@@ -45,15 +45,20 @@ struct SettingsView: View {
                         }
                     }
                     .disabled(isImporting)
+
+                    if case .accessDenied = lastImport {
+                        Button(action: openHealthApp) {
+                            HStack {
+                                Image(systemName: "arrow.up.forward.app.fill")
+                                    .foregroundColor(.pink)
+                                Text("Open Apple Health")
+                            }
+                        }
+                    }
                 } header: {
                     Text("About you")
                 } footer: {
-                    if importFailed {
-                        Text("Apple Health did not return a date of birth. It may not be set, or access may have been declined. You can tap Year of birth above and choose it yourself.")
-                            .foregroundColor(.orange)
-                    } else {
-                        Text("Vitamin D synthesis declines gradually with age, so SUNniDAY adjusts its estimate if you set a birth year. The year is enough; it never asks for a full date of birth, and importing keeps only the year. Leave it unset and no age adjustment is applied.")
-                    }
+                    footerText
                 }
             }
             .navigationTitle("Settings")
@@ -67,16 +72,41 @@ struct SettingsView: View {
         .presentationBackground(Color(UIColor.systemBackground).opacity(0.99))
     }
 
+    @ViewBuilder
+    private var footerText: some View {
+        switch lastImport {
+        case .accessDenied:
+            // iOS will not show the permission sheet again once this app has
+            // been answered about date of birth, so pointing at the sheet would
+            // be useless advice. The Health app is the only route back.
+            Text("SUNniDAY does not have permission to read your date of birth, and iOS will not ask again. Turn it on in Apple Health under Profile, Apps and Services, SUNniDAY. Or just tap Year of birth above and choose it yourself.")
+                .foregroundColor(.orange)
+        case .noDateInHealth:
+            Text("Apple Health does not have a date of birth set. You can add one in Health, or tap Year of birth above and choose it yourself.")
+                .foregroundColor(.orange)
+        case .healthUnavailable:
+            Text("Apple Health is not available on this device. Tap Year of birth above to set it yourself.")
+                .foregroundColor(.orange)
+        case .imported, .none:
+            Text("Vitamin D synthesis declines gradually with age, so SUNniDAY adjusts its estimate if you set a birth year. The year is enough; it never asks for a full date of birth, and importing keeps only the year. Leave it unset and no age adjustment is applied.")
+        }
+    }
+
     private func importFromHealth() {
         isImporting = true
-        importFailed = false
-        healthManager.importBirthYearFromHealth { year in
+        lastImport = nil
+        healthManager.importBirthYearFromHealth { result in
             isImporting = false
-            if let year {
+            lastImport = result
+            if case .imported(let year) = result {
                 vitaminDCalculator.birthYear = year
-            } else {
-                importFailed = true
             }
+        }
+    }
+
+    private func openHealthApp() {
+        if let url = URL(string: "x-apple-health://") {
+            UIApplication.shared.open(url)
         }
     }
 }
