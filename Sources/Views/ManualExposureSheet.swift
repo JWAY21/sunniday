@@ -294,12 +294,8 @@ struct ManualExposureSheet: View {
 
                             // Save button
                             Button(action: saveToHealth) {
-                                HStack {
-                                    Image(systemName: "heart.fill")
-                                        .font(.system(size: 16))
-                                    Text("Save")
-                                        .font(.system(size: 18, weight: .semibold))
-                                }
+                                Text("Save")
+                                    .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)

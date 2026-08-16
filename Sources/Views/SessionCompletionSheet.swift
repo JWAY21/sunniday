@@ -172,12 +172,8 @@ struct SessionCompletionSheet: View {
                     // screen with no way to scroll to them.
                     VStack(spacing: 12) {
                         Button(action: { saveSession() }) {
-                            HStack {
-                                Image(systemName: "heart.fill")
-                                    .font(.system(size: 18))
-                                Text("Save")
-                                    .font(.system(size: 18, weight: .semibold))
-                            }
+                            Text("Save")
+                                .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
