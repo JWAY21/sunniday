@@ -317,8 +317,22 @@ struct ContentView: View {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 20))
                         .foregroundColor(.white.opacity(0.85))
+                        .overlay(alignment: .topTrailing) {
+                            // Unset age silently gives the most generous
+                            // estimate, since no adjustment is applied. The dot
+                            // flags that something is waiting rather than
+                            // letting people assume the default is tuned.
+                            if vitaminDCalculator.birthYear == nil {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 8, height: 8)
+                                    .offset(x: 4, y: -3)
+                            }
+                        }
                 }
-                .accessibilityLabel("Settings")
+                .accessibilityLabel(vitaminDCalculator.birthYear == nil
+                                    ? "Settings, year of birth not set"
+                                    : "Settings")
                 Spacer()
                 Button(action: { showHistorySheet = true }) {
                     Image(systemName: "chart.bar.fill")

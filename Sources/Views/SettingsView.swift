@@ -25,8 +25,21 @@ struct SettingsView: View {
                             Text("Year of birth")
                                 .foregroundColor(.primary)
                             Spacer()
-                            Text(vitaminDCalculator.birthYear.map(String.init) ?? "Not set")
-                                .foregroundColor(.secondary)
+                            if let year = vitaminDCalculator.birthYear {
+                                Text(String(year))
+                                    .foregroundColor(.secondary)
+                            } else {
+                                // Called out rather than shown as ordinary
+                                // placeholder text: unset means no age
+                                // adjustment at all, which quietly inflates the
+                                // estimate for anyone over 20.
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                    Text("Not set")
+                                }
+                                .foregroundColor(.orange)
+                                .fontWeight(.semibold)
+                            }
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.secondary.opacity(0.6))
@@ -88,7 +101,12 @@ struct SettingsView: View {
             Text("Apple Health is not available on this device. Tap Year of birth above to set it yourself.")
                 .foregroundColor(.orange)
         case .imported, .none:
-            Text("Vitamin D synthesis declines gradually with age, so SUNniDAY adjusts its estimate if you set a birth year. The year is enough; it never asks for a full date of birth, and importing keeps only the year. Leave it unset and no age adjustment is applied.")
+            if vitaminDCalculator.birthYear == nil {
+                Text("Please set your year of birth. Vitamin D synthesis declines gradually with age, and until this is set SUNniDAY applies no age adjustment at all, which overestimates for anyone over 20. The year is enough; it never asks for a full date of birth, and importing keeps only the year.")
+                    .foregroundColor(.orange)
+            } else {
+                Text("Vitamin D synthesis declines gradually with age, so SUNniDAY adjusts its estimate using your birth year. The year is enough; it never asks for a full date of birth, and importing keeps only the year.")
+            }
         }
     }
 

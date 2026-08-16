@@ -21,14 +21,10 @@ class MigrationService {
             // Migrate skin type
             let skinType = UserDefaults.standard.object(forKey: "userSkinType") as? Int ?? 3
             
-            // Migrate user age
-            let userAge = UserDefaults.standard.object(forKey: "userAge") as? Int ?? 30
-            
             // Create new UserPreferences in SwiftData
             let preferences = UserPreferences(
                 clothingLevel: clothingLevel,
-                skinType: skinType,
-                userAge: userAge
+                skinType: skinType
             )
             
             modelContext.insert(preferences)

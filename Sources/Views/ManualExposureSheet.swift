@@ -297,7 +297,7 @@ struct ManualExposureSheet: View {
                                 HStack {
                                     Image(systemName: "heart.fill")
                                         .font(.system(size: 16))
-                                    Text("Save to Health")
+                                    Text("Save")
                                         .font(.system(size: 18, weight: .semibold))
                                 }
                                 .foregroundColor(.white)
