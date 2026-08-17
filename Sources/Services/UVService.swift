@@ -91,59 +91,81 @@ class UVService: ObservableObject {
 
     // MARK: Cloud Cover Override
 
-    /// Non-linear cloud transmission lookup based on WMO empirical data.
-    /// The Open-Meteo UV model is not linear — thick cloud cover disproportionately
-    /// blocks UVB. These values match observed UV attenuation at 550 nm (UVB range).
-    ///   0% → 1.00  (full clear sky)
-    ///  25% → 0.90  (thin scattered cloud, little effect)
-    ///  50% → 0.72  (broken cloud, meaningful reduction)
-    ///  75% → 0.45  (heavy overcast, large reduction)
-    /// 100% → 0.17  (dense overcast / rain, but UV still penetrates)
-    private func cloudTransmission(_ cloudPercent: Double) -> Double {
-        switch cloudPercent {
-        case 0:   return 1.00
-        case 25:  return 0.90
-        case 50:  return 0.72
-        case 75:  return 0.45
-        case 100: return 0.17
-        default:
-            // Interpolate between the nearest two breakpoints
-            let breakpoints: [(Double, Double)] = [(0,1.00),(25,0.90),(50,0.72),(75,0.45),(100,0.17)]
-            for i in 0..<breakpoints.count - 1 {
-                let (x0, y0) = breakpoints[i]
-                let (x1, y1) = breakpoints[i + 1]
-                if cloudPercent <= x1 {
-                    let t = (cloudPercent - x0) / (x1 - x0)
-                    return y0 + t * (y1 - y0)
-                }
-            }
-            return 0.17
-        }
+    /// How much UV each percent of cloud removes, derived per-hour from the
+    /// forecast rather than assumed.
+    ///
+    /// A fixed cloud-percent-to-transmission curve cannot work here. Measured
+    /// against 10 days of Open-Meteo data for Byron Bay, the transmission
+    /// actually delivered at a given cloud cover ranges enormously: at 63-87%
+    /// cloud it fell anywhere between 0.10 and 0.99, and two hours with an
+    /// identical 78% cover differed eightfold. The driver is cloud optical
+    /// depth, which the API does not expose. Cloud layer does not rescue it
+    /// either (low/mid/high correlate at best r = -0.54).
+    ///
+    /// So instead of assuming a curve, read the slope the forecast is already
+    /// implying this hour: the API gives both `uv_index` and
+    /// `uv_index_clear_sky`, and their ratio at the forecast cloud cover is one
+    /// real point on today's curve. Anchor the other end at clear sky and scale.
+    private enum CloudAttenuation {
+        /// Bounds on the per-percent slope. A single (cover, transmission) pair
+        /// cannot separate "little cloud" from "thin cloud", so an unclamped
+        /// slope misbehaves at both ends: thin cloud reads as zero attenuation
+        /// and implies overcast is harmless, while a sun already behind thick
+        /// cloud implies overcast blocks everything. Bounds are the 10th-90th
+        /// percentile of the measured sample.
+        static let minSlope = 0.0015
+        static let maxSlope = 0.0085
+        /// Used when the forecast has too little cloud to infer a slope from.
+        /// Median of the measured sample.
+        static let defaultSlope = 0.0021
+        /// Below this there is not enough cloud for the ratio to mean anything.
+        static let minInferableCover = 5.0
+        /// UV still reaches the ground under dense overcast, so never scale to
+        /// nothing.
+        static let minTransmission = 0.20
+    }
+
+    /// Transmission to apply at `cover`, given the slope implied by the forecast.
+    private func transmission(at cover: Double, impliedBy slope: Double) -> Double {
+        let bounded = min(max(slope, CloudAttenuation.minSlope), CloudAttenuation.maxSlope)
+        return min(1.0, max(CloudAttenuation.minTransmission, 1.0 - bounded * cover))
     }
 
     /// Apply a user-selected cloud cover override (0, 25, 50, 75, or 100).
     ///
-    /// Preferred path: the API's clear-sky UV *for this hour* is exactly "the UV
-    /// with no cloud", so the override is a straight multiply by the transmission
-    /// factor — no back-calculation, correct at every time of day.
-    ///
-    /// Fallback (offline/cached, no hourly clear-sky available): back-calculate
-    /// from the observed UV, capped at the day's clear-sky max. That ceiling is a
-    /// *daily* peak, so it over-estimates away from solar noon — hence only a
-    /// fallback.
+    /// The user is saying the sky does not match the forecast. Rather than
+    /// substituting an assumed curve, this rescales using the attenuation the
+    /// forecast itself is showing for the current hour, so the result stays
+    /// consistent with the data source at every step. An override of 0% returns
+    /// exactly the API's clear-sky figure.
     func applyCloudOverride(_ percent: Double) {
-        let clearSkyUV: Double
-        if apiClearSkyUV > 0 {
-            clearSkyUV = apiClearSkyUV
-        } else {
-            let currentTransmission = cloudTransmission(apiCloudCover)
-            guard currentTransmission > 0 else { return }
-            let ceiling = clearSkyMaxUV > 0 ? clearSkyMaxUV : apiUV
-            clearSkyUV = min(apiUV / currentTransmission, ceiling)
+        guard apiClearSkyUV > 0 else {
+            // Cached or offline: no clear-sky baseline to anchor against, so
+            // fall back to the default slope applied to the observed UV.
+            let observedSlope = CloudAttenuation.defaultSlope
+            let assumedClearSky = min(apiUV / transmission(at: apiCloudCover, impliedBy: observedSlope),
+                                      clearSkyMaxUV > 0 ? clearSkyMaxUV : apiUV)
+            currentUV = assumedClearSky * transmission(at: percent, impliedBy: observedSlope)
+            currentCloudCover = percent
+            cloudCoverOverride = percent
+            calculateSafeExposureTimes()
+            return
         }
-        currentUV = clearSkyUV * cloudTransmission(percent)
+
+        // The slope today's forecast is implying, from its own two numbers.
+        let observedTransmission = min(1.0, apiUV / apiClearSkyUV)
+        let slope = apiCloudCover >= CloudAttenuation.minInferableCover
+            ? (1.0 - observedTransmission) / apiCloudCover
+            : CloudAttenuation.defaultSlope
+
+        currentUV = apiClearSkyUV * transmission(at: percent, impliedBy: slope)
         currentCloudCover = percent
         cloudCoverOverride = percent
+        // Burn time is derived from currentUV, so it has to move with the
+        // override. Without this the limit stayed at the pre-override value:
+        // overriding heavy cloud to clear sky could leave "4h 2m" on screen
+        // while the UV it was based on had gone from 1.8 to 8.9.
+        calculateSafeExposureTimes()
     }
 
     /// Multiplier the active manual cloud override applies to raw forecast UV
@@ -160,6 +182,7 @@ class UVService: ObservableObject {
         currentUV = apiUV
         currentCloudCover = apiCloudCover
         cloudCoverOverride = nil
+        calculateSafeExposureTimes()
     }
 
     var shouldShowTomorrowTimes: Bool {
