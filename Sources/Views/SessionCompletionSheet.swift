@@ -265,8 +265,10 @@ struct SessionCompletionSheet: View {
     }
 
     private func endWithoutSaving() {
-        vitaminDCalculator.sessionVitaminD = 0.0
-        vitaminDCalculator.toggleSunExposure(uvIndex: 0)
+        // Un-banks the dose this session accrued as well as ending it. Without
+        // that, discarding left the day's accumulator advanced while nothing
+        // was recorded, suppressing every later estimate that day.
+        vitaminDCalculator.discardSessionAndUnbankDose()
         dismiss()
     }
 }

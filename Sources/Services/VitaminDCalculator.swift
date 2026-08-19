@@ -512,10 +512,36 @@ class VitaminDCalculator: ObservableObject {
 
     /// End the in-app session without saving — used when a widget End action
     /// already produced the authoritative record for the same session.
+    /// Drop the app's own copy of a session without touching the day's dose.
+    ///
+    /// Used when the widget has already finalised and saved the same session:
+    /// the exposure genuinely happened, so the banked dose must stay.
     func discardActiveSession() {
         guard isInSun else { return }
         isInSun = false
         stopSession()
+    }
+
+    /// End a session and un-bank everything it accrued.
+    ///
+    /// For the user explicitly discarding one ("End and Don't Save"), which
+    /// means the exposure should not count at all. The daily accumulator drives
+    /// the saturation curve, so leaving it advanced suppressed every later
+    /// estimate that day while nothing had been recorded: a Begin tapped by
+    /// accident and noticed hours later left the app reporting a small fraction
+    /// of the true rate, with no way for anyone to see why or undo it.
+    ///
+    /// sessionStartDayDose is persisted alongside the active session, so this
+    /// still restores correctly if the app was relaunched mid-session.
+    func discardSessionAndUnbankDose() {
+        guard isInSun else { return }
+        todaysDose = sessionStartDayDose
+        sessionVitaminD = 0
+        isInSun = false
+        stopSession()
+        // The rate is a function of the day's dose, so it has to be recomputed
+        // now that the dose has been rolled back.
+        updateVitaminDRate(uvIndex: lastUV)
     }
 
     func addManualEntry(amount: Double) {
