@@ -544,15 +544,26 @@ class VitaminDCalculator: ObservableObject {
         updateVitaminDRate(uvIndex: lastUV)
     }
 
-    func addManualEntry(amount: Double) {
-        // Simply add the manual entry amount to today's session vitamin D
-        // This will be saved to Health by the view that calls this.
+    /// Record a manually logged session.
+    ///
+    /// - Parameter date: when the logged exposure actually happened. Sun from an
+    ///   earlier day has no bearing on today's photoequilibrium or on a session
+    ///   in progress, so it must not advance either. Logging a session from
+    ///   three days ago used to suppress today's rate and inflate the running
+    ///   session's total. Health still receives it either way; the caller
+    ///   handles that separately.
+    func addManualEntry(amount: Double, on date: Date = Date()) {
+        guard Calendar.current.isDateInToday(date) else {
+            pendingLoggedDose = 0
+            updateWidgetData(force: true)
+            return
+        }
         // Tracked separately so an active session's per-tick recompute (which
         // derives synthesis from the accumulated dose) doesn't discard it.
         manualSessionAdjustment += amount
         sessionVitaminD += amount
         commitLoggedDose()
-        
+
         // Update widget data to reflect the new total
         updateWidgetData(force: true)
     }

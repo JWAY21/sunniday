@@ -494,7 +494,7 @@ struct ManualExposureSheet: View {
         let date   = effectiveStartTime
         healthManager.saveVitaminD(amount: amount, date: date) { _ in
             // Update UI immediately with manual addition
-            vitaminDCalculator.addManualEntry(amount: amount)
+            vitaminDCalculator.addManualEntry(amount: amount, on: date)
             // Refresh cached Health base and widget
             vitaminDCalculator.refreshTodayTotals(forceWidget: true)
         }
